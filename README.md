@@ -1,4 +1,4 @@
-This project if for learning porpuse, it's a set of libs to use opengl and GLFW to create a 2D game, trying to make utilitys for other people to create a game more quickly,
+This project is for learning porpuse, it's a set of libs to use opengl and GLFW to create a 2D game, trying to make utilitys for other people to create a game more quickly,
 i want to extend it more, probably make something near like "game maker", but that is still far.
 
 In this moment the build system just create a project for visual studio 2017 to 2022 with premake, of course you can change the scripts or create another to tell to premake to create for other IDE or create a makefile for linux.
