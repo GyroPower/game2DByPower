@@ -1,0 +1,10 @@
+/Binaries
+/libraries/Binaries
+*/obj
+/.vs
+/.vscode
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+imgui.ini
