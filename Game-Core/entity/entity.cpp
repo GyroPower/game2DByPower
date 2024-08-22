@@ -58,7 +58,7 @@ Entity2D_Instaciaded::Entity2D_Instaciaded(int& renderIndex, glm::vec3 position,
 	glm::vec2 texSize)
 	: m_color(color), m_position(position), m_size(size), texSlot(texSlot), m_entityIndex(entityIndex),
 	m_texCoords(texPos, texSize),m_texOffset(glm::vec2(0.0f)), m_maxSpeed(120.0f),m_previusPos(position),
-	m_grounded(false), m_speed(0.0f),m_wallTouch(false), m_pushed(false),m_right(false), m_left(false)
+	m_grounded(false), m_speed(0.0f),m_wallTouch(false), m_pushed(false),m_right(false), m_left(false),state(IDLE)
 {
 	this->direction = glm::vec3(0.0f);
 	this->m_renderInstanceIndex = renderIndex;
@@ -85,9 +85,12 @@ void Entity2D_Instaciaded::move(float& dt)
 {
 	this->m_previusPos = this->m_position;
 	
-	//this->m_speed += 
-	
-	this->m_position += dt * this->m_speed;
+	if (this->m_pushed)
+		this->state = MOVE;
+	else
+		this->state = IDLE;
+
+	this->m_position += this->m_speed;
 
 	
 	//if (useInterpolation)
@@ -101,7 +104,7 @@ void Entity2D_Instaciaded::setPosInterpolation(float& dt)
 
 Rect Entity2D_Instaciaded::m_getEntityRect()
 {
-	return Rect(this->m_position,this->m_size);
+	return Rect(this->m_position,this->m_size,this->m_previusPos);
 }
 
 ////////////////////////////////////

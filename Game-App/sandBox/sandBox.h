@@ -12,7 +12,7 @@ private:
 	bool startRender;
 	bool m_showGridMap;
 	bool m_enableTileMapEditing;
-	bool m_enableInterpolation;
+	bool m_showEntitiesQuads;
 	bool m_gravityInfluence;
 	float initialZoom;
 	float time;
@@ -33,13 +33,10 @@ public:
 	void GetMousePos(glm::vec2 pos);
 	void updateMousePos();
 
-	void m_movePlayer(glm::vec3 direction);
-	void checkCollisionForEntity();
 	void processInput(float dt);
 	void renderGUI();
 	void initRenderData();
 	void update(float& dt);
-	void updateVertices(Entity2D& entity,int entityIndex);
 	void updateEntities(float& dt);
 	void renderScene(float dt);
 	void initSandBox(int width, int height);

@@ -8,6 +8,7 @@
 #include<vector>
 #include<stb_image/stb_image.h>
 #include"entity/entity.h"
+#include"entity/player/player.h"
 #include"Spriterenderer/spriteRenderer.h"
 #include"Spriterenderer/rendererDebugQuad/rendererDebugQuad.h"
 #include"Spriterenderer/renderTileMap/rendererGridTileMap.h"
@@ -31,13 +32,12 @@ static SpriteRendererInstanced* spriteRendererInstancedTile;
 static TileMap* tileMap;
 
 static std::vector<Texture2D> textures;
-static glm::vec3 vel1(0.0f);
 static float velocity = 150.0f;
 static float animTime = 0.0f;
 static std::vector<Vertex> vertices;
 static std::vector<Entity2D> entities;
 static std::vector<Entity2D_Instaciaded> entitiesInstanced;
-static Entity2D_Instaciaded* player;
+static Player* player;
 static glm::vec2 worldGrid(0.0f, 0.0f);
 static std::vector<unsigned int> indices;
 static glm::vec3 direction(1.0f, 0.0f, 0.0f);
@@ -58,119 +58,7 @@ static glm::vec2 getPlayerGridPos(glm::vec2 worlPos)
 	return glm::vec2(worlPos.x / tileSize, worlPos.y / tileSize);
 }
 
-static void Move(Entity2D_Instaciaded& entity,float& dt)
-{
-	static glm::vec2 remainder(0.0f);
-	static bool grounded = false;
 
-	static Rect entityRect = entity.m_getEntityRect();
-
-	// Move on X
-	remainder.x += entity.m_speed.x;
-	int moveX = round(remainder.x);
-	
-	if (moveX != 0)
-	{
-		remainder.x -= moveX;
-		int moveSign = byPowerMath::sign(moveX);
-		bool collisionHappend = false;
-
-		auto movePlayerX = [&]
-			{
-				while (moveX)
-				{
-					entityRect.pos.x += moveSign;
-					glm::vec2 entityGridPos = getPlayerGridPos(entity.m_position);
-					for (int x = entityGridPos.x - 1; x <= entityGridPos.x + 1; x++)
-					{
-						for (int y = entityGridPos.y - 1; y <= entityGridPos.y + 1; y++)
-						{
-							Tile* tile = tileMap->m_GetTile(glm::vec3(x, y, 0.0f));
-
-
-
-							if (!tile || !tile->m_isVisible())
-							{
-								continue;
-							}
-
-							Rect tileRect = tile->m_getEntityRect();
-							
-
-
-							if (rect_collision(entityRect, tileRect))
-							{
-								LOG("COLLISION");
-								entity.m_speed.x = 0;
-								return;
-							}
-						}
-					}
-					entity.m_previusPos = entity.m_position;
-					
-					entity.m_position.x += moveSign;
-					//entity.setPosInterpolation(dt);
-					LOGVAR("MOVEX: ", moveX);
-					moveX -= moveSign;
-				}
-
-			};
-		movePlayerX();
-
-	}
-
-	
-	entityRect = entity.m_getEntityRect();
-
-	//Move on Y
-	remainder.y += entity.m_speed.y;
-	int moveY = round(remainder.y);
-
-	if (moveY != 0)
-	{
-		remainder.y -= moveY;
-		int moveSign = byPowerMath::sign(moveY);
-		bool collisionHappend = false;
-
-		auto movePlayerY = [&]
-			{
-				while (moveY)
-				{
-					entityRect.pos.y += moveSign;
-					glm::vec2 entityGridPos = getPlayerGridPos(entity.m_position);
-					for (int x = entityGridPos.x - 1; x <= entityGridPos.x + 1; x++)
-					{
-						for (int y = entityGridPos.y - 1; y <= entityGridPos.y + 1; y++)
-						{
-							Tile* tile = tileMap->m_GetTile(glm::vec3(x, y, 0.0f));
-
-							if (!tile || !tile->m_isVisible())
-							{
-								continue;
-							}
-
-							Rect tileRect = tile->m_getEntityRect();
-							if (rect_collision(entityRect, tileRect))
-							{
-								if (entity.m_speed.y > 0.0f)
-								{
-									grounded = true;
-								}
-
-								entity.m_speed.y = 0;
-								return;
-							}
-						}
-					}
-					entity.m_position.y += moveSign;
-					moveY -= moveSign;
-				}
-
-			};
-		movePlayerY();
-
-	}
-}
 
 void detectCol(Entity2D_Instaciaded& entity)
 {
@@ -188,9 +76,12 @@ void detectCol(Entity2D_Instaciaded& entity)
 
 				if (rect_collision(entity.m_getEntityRect(), tile->m_getEntityRect()))
 				{
-
-					if (entity.m_previusPos.x + entity.m_size.x <= tile->m_position.x &&
-						entity.m_position.x + entity.m_size.x > tile->m_position.x)
+					Rect entityRect = entity.m_getEntityRect();
+					Rect tileRect = tile->m_getEntityRect();
+					if (entityRect.previusPos.x + entityRect.size.x<= tileRect.pos.x ||
+						entityRect.previusPos.x + entityRect.size.x < tileRect.pos.x + (tileRect.size.x / 2)
+						&& entityRect.pos.x + entityRect.size.x > tileRect.pos.x ||
+						entityRect.pos.x + entityRect.size.x > tileRect.pos.x + tileRect.size.x)
 					{
 						entity.m_color = glm::vec4(0.5, 1.0, 0.7, 1.0f);
 						entity.m_previusPos.x = tile->m_position.x - entity.m_size.x - 1;
@@ -285,7 +176,7 @@ void detectCol(Entity2D_Instaciaded& entity)
 
 SandBox::SandBox()
 	:w_width(0), w_height(0), startRender(false),initialZoom(1.0f), m_enableTileMapEditing(false),
-	m_showGridMap(false), time(0.0f), m_enableInterpolation(false),m_gravityInfluence(false)
+	m_showGridMap(false), time(0.0f), m_showEntitiesQuads(false),m_gravityInfluence(false)
 {
 	
 }
@@ -324,10 +215,6 @@ void SandBox::initSandBox(int width, int height) {
 	
 	//glm::mat4 persperctiveMat = glm::perspective()
 	//this is the main shader for rendering all the entities objecs, player, npcs or enemies, and enviroment objects
-	shaderP =  Shader("../shaders/renderer/shader.vs", "../shaders/renderer/shader.frag");
-	shaderP.use().setMat4("projection", projection);
-	shaderP.use().setInt("textures[0]", 0);
-	shaderP.use().setInt("textures[1]", 1);
 	
 	shaderIntancing = Shader("../shaders/rendererInstancing/Instancing.vs",
 		"../shaders/rendererInstancing/renderer.frag");
@@ -381,11 +268,8 @@ void SandBox::initRenderData() {
 
 	
 
-	/*Entity2D entity1((float)textures[0].slot,glm::vec4(1.0f,0.5f,0.4f,1.0f),glm::vec3(40.0f,10.0f,0.0f));
-	Entity2D entity2((float)textures[1].slot);
-	Entity2D entity3(-1.0f, glm::vec4(0.5f, 1.0f, 0.4f, 1.0f), glm::vec3(10.0f, 10.0f, 0.0f), glm::vec2(5.0f));*/
-
-	player = new Entity2D_Instaciaded(instanceEntity_index, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(16.0f), glm::vec4(1.0f),
+	
+	player = new Player(instanceEntity_index, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(16.0f), glm::vec4(1.0f),
 		(float)textures[0].slot);
 	Entity2D_Instaciaded entity_in2(instanceEntity_index, glm::vec3(150.0f, 50.0f, 0.0f), glm::vec2(8.0f),
 		glm::vec4(0.1f,0.5f,1.0f,1.0f), (float)textures[1].slot,glm::vec2(0.0f), glm::vec2(1.0f));
@@ -396,56 +280,6 @@ void SandBox::initRenderData() {
 	entitiesInstanced.emplace_back(entity_in2);
 	entitiesInstanced.emplace_back(entity_in3);
 
-	/*for (int i = entitiesInstanced.size() - 1; i < 17; i++) {
-		entitiesInstanced.emplace_back(Entity2D_Instaciaded(
-			instance_index, (float)textures[0].slot, glm::vec4(0.1f * (i / 2), 0.5f, 1.0f, 1.0f),
-			glm::vec3(1.0f + (50.0f * i), 1.0f , 1.0f), glm::vec2(50.0f)
-		));
-	}*/
-
-	/*entities.emplace_back(entity1); 
-	entities.emplace_back(entity2);
-	entities.emplace_back(entity3);*/
-
-	
-
-	/*for (int i = 0; i < entities.size(); i++) {
-
-		if (i == 0) {
-
-			entities[i].indices.emplace_back(0);
-			entities[i].indices.emplace_back(1);
-			entities[i].indices.emplace_back(2);
-			entities[i].indices.emplace_back(0);
-			entities[i].indices.emplace_back(3);
-			entities[i].indices.emplace_back(2);
-			
-			
-		}
-		else {
-			int j = i * 4;
-			entities[i].indices.emplace_back(j);
-			entities[i].indices.emplace_back(j + 1);
-			entities[i].indices.emplace_back(j + 2);
-			entities[i].indices.emplace_back(j);
-			entities[i].indices.emplace_back(j + 3);
-			entities[i].indices.emplace_back(j + 2);
-		}
-
-		//inserting all the vertices to the vertices vector for the draw call
-		for (int j = 0; j < 4; j++) {
-			vertices.emplace_back(entities[i].vertexs[j]);
-		}
-		
-		for (int j = 0; j < 6; j++) {
-			indices.emplace_back(entities[i].indices[j]);
-		}
-		
-	}*/
-
-
-	//spriteRenderer->reserveRenderBuffer();
-	//spriteRenderer->fillData(vertices, indices);
 	spriteRendererInstanced->reserveBuffer();
 	spriteRendererInstanced->initFillData(entitiesInstanced);
 	spriteRendererInstancedTile->reserveBuffer();
@@ -586,7 +420,8 @@ void SandBox::processInput(float dt) {
 	player->move(dt);
 	detectCol(*player);
 	spriteRendererInstanced->updateEntity(*player);
-	spriteRendererDebugQuad->updateData(*player);
+	if (this->m_showEntitiesQuads)
+		spriteRendererDebugQuad->updateData(*player);
 	
 
 	if (this->keys[GLFW_MOUSE_BUTTON_1])
@@ -671,31 +506,6 @@ void SandBox::updateEntities(float& dt) {
 
 	float vel = dt * velocity / 1.5;
 	
-	/*this->updateVertices(entities[0], 0);
-	if (entities[1].position.x + entities[1].size.x > this->w_width/this->initialZoom || entities[1].position.x < 0)
-		direction.x *= -1;
-	entities[1].position.x += vel * direction.x;
-	entities[1].updateVertexs();
-	this->updateVertices(entities[1], 1);*/
-
-}
-
-//this func update the vertices in the vertices vector for a specific entity 
-void SandBox::updateVertices(Entity2D& entity, int entityIndex) {
-
-	int VerticeIndex = entityIndex * 4;	
-	
-	for (int i = 0; i < 4; i++) {
-		vertices[VerticeIndex + i].position = entity.vertexs[i].position;
-		vertices[VerticeIndex + i].texCoords = entity.vertexs[i].texCoords;
-	}
-	std::vector<Vertex> verticesToUpdate;
-	verticesToUpdate.reserve(4);
-	verticesToUpdate.emplace_back(entity.vertexs[0]);
-	verticesToUpdate.emplace_back(entity.vertexs[1]);
-	verticesToUpdate.emplace_back(entity.vertexs[2]);
-	verticesToUpdate.emplace_back(entity.vertexs[3]);
-	spriteRenderer->updateData(verticesToUpdate, entityIndex);
 	
 }
 
@@ -711,9 +521,11 @@ void SandBox::renderGUI() {
 	gui.showVec("globalMousePos", glm::vec3(this->m_mousePosGlobal,0.0f));
 	gui.enableTileMapEditing(this->m_enableTileMapEditing, this->m_showGridMap);
 	gui.enableBool("gravity influence", this->m_gravityInfluence);
+	gui.enableBool("Show entities quads", this->m_showEntitiesQuads);
 	gui.showBoolVar("Pushed player", player->m_pushed);
 	gui.showBoolVar("Wall Touch player", player->m_wallTouch);
 	float xRightPos = player->m_position.x + player->m_size.x;
+	
 	
 	//gui.enableBool("showGrid", this->m_showGridMap);
 	//gui.useSliderForFloat("scale", scale);
@@ -730,6 +542,7 @@ void SandBox::renderScene(float dt) {
 		rendererGridMap->draw(camera);
 	spriteRendererInstancedTile->draw(camera, textures, "renderTiles");
 	spriteRendererInstanced->draw(camera,textures,"renderEntities");
-	spriteRendererDebugQuad->draw(camera);
+	if(this->m_showEntitiesQuads)
+		spriteRendererDebugQuad->draw(camera);
 }
 

@@ -2,17 +2,17 @@
 
 namespace byPowerMath
 {
-	float lerp(float first, float second)
+	float lerp(float first, float second, float time)
 	{
-		return first + (second - first);
+		return first * (1 - time) + second * time ;
 	}
 
 	glm::vec3 lerp(glm::vec3 first, glm::vec3 second, float time)
 	{
 		glm::vec3 result(0.0f);
-		result.x = lerp(first.x, second.x);
-		result.y = lerp(first.y, second.y);
-		result.z = lerp(first.z, second.z);
+		result.x = lerp(first.x, second.x, time);
+		result.y = lerp(first.y, second.y, time);
+		result.z = lerp(first.z, second.z, time);
 
 		return result;
 	}

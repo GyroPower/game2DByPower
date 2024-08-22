@@ -10,6 +10,6 @@ In the Vendor/Binaries/Premake there are different premake binaries for the OS y
 I wiil change this for people to make it quickly, but for now i leave it this way.
 
 I have to clean the code and delete some comments of code i don't use anymore and var declarations that are not usefull to, sorry for the mess, i will clean it, and rename
-certain things to, because they don't make of how they are named and explain somethings is use for experiment, use logs for benchmark with ImGui to see the performance,implement better math functions for the physics and write better in english (is not my first language).
+certain things to, because they don't make sence of how they are named and explain somethings that i used for experiment, use logs for benchmark with ImGui to see the performance,implement better math functions for the physics and write better in english (is not my first language).
 
 I will document better this project but for now i leave it this way.

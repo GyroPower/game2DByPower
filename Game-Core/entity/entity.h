@@ -20,13 +20,31 @@ struct Vertex {
 
 };
 
+//This struct will help for simple 2d collision and reposition of the entites
 struct Rect {
+	//offsets for resizable
+	glm::vec2 posOffset;
+	glm::vec2 sizeOffset;
+
+	glm::vec2 previusPos;
 	glm::vec2 pos;
 	glm::vec2 size;
 
-	Rect(glm::vec2 _pos = glm::vec2(0.0f), glm::vec2 _size = glm::vec2(0.0f))
-		:pos(_pos), size(_size)
-	{}
+	Rect(glm::vec2 _pos = glm::vec2(0.0f), glm::vec2 _size = glm::vec2(0.0f),
+		glm::vec2 _prevPos = glm::vec2(0.0f), glm::vec2 _posOffset = glm::vec2(0.0f),
+		glm::vec2 _sizeOffset = glm::vec2(0.0f))
+		:pos(_pos), size(_size), previusPos(_prevPos), posOffset(_posOffset), sizeOffset(_sizeOffset)
+	{
+		if (this->posOffset.x != 0.0f || this->posOffset.y != 0.0f)
+		{
+			this->previusPos += this->posOffset; 
+			this->pos += this->posOffset; 
+		}
+		if (this->sizeOffset.x != 0.0f || this->sizeOffset.y != 0.0f)
+		{
+			this->size += this->sizeOffset; 
+		}
+	}
 	~Rect() {}
 };
 
@@ -86,6 +104,7 @@ public:
 	glm::vec2 m_texOffset;
 	int m_entityIndex;
 	int m_renderInstanceIndex;
+	EntityState state;
 	
 	bool m_grounded;
 	bool m_wallTouch;
@@ -103,9 +122,8 @@ public:
 	int m_returnRenderIndex();
 	void move(float& dt);
 	void setPosInterpolation(float& dt);
-	void m_setSpeed();
-
-	Rect m_getEntityRect();
+	
+	virtual Rect m_getEntityRect();
 };
 
 class Tile : public Entity2D_Instaciaded {
