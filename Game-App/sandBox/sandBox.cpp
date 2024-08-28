@@ -3,7 +3,7 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<iostream>
 #include<GLFW/glfw3.h>
-#include"UI/Ui.h"
+#include"GUI/Gui.h"
 #include"Texture/texture.h"
 #include<vector>
 #include<stb_image/stb_image.h>
@@ -19,14 +19,16 @@
 
 
 static Camera camera;
-static UI gui;
+static GUI gui;
 static Shader shaderP;
 static Shader shaderIntancing;
 static Shader shaderDebugQuad;
 static Shader shaderGrid;
-static SpriteRenderer* spriteRenderer;
+static Shader shaderPlayer;
 static SpriteRendererInstanced* spriteRendererInstanced;
+static SpriteRendererInstanced* spriteRendererInstancedPlayer;
 static rendererDebugQuad* spriteRendererDebugQuad;
+static rendererDebugQuad* spriteRendererDebugQuadPlayer;
 static RendererGridTileMap* rendererGridMap;
 static SpriteRendererInstanced* spriteRendererInstancedTile;
 static TileMap* tileMap;
@@ -34,23 +36,21 @@ static TileMap* tileMap;
 static std::vector<Texture2D> textures;
 static float velocity = 150.0f;
 static float animTime = 0.0f;
-static std::vector<Vertex> vertices;
-static std::vector<Entity2D> entities;
 static std::vector<Entity2D_Instaciaded> entitiesInstanced;
 static Player* player;
 static glm::vec2 worldGrid(0.0f, 0.0f);
-static std::vector<unsigned int> indices;
-static glm::vec3 direction(1.0f, 0.0f, 0.0f);
 static glm::vec3 globalOrigin(0.0f);
+static std::vector<Texture2D> playerTex;
+static std::vector<Texture2D> tilesTex;
 
 
-static int instance_index = 0;
 static int instanceTileRender_index = 0;
 static int instanceEntity_index = 0;
+static int playerRenderIndex = 0;
 static float scale = 1.0f;
 static float widthProjection = 0.0f;
 static float heightProjection = 0.0f;
-constexpr static float tileSize = 8.0f;
+static float tileSize = 8.0f;
 
 
 static glm::vec2 getPlayerGridPos(glm::vec2 worlPos)
@@ -60,10 +60,11 @@ static glm::vec2 getPlayerGridPos(glm::vec2 worlPos)
 
 
 
-void detectCol(Entity2D_Instaciaded& entity)
+void detectTileCol(Entity2D_Instaciaded& entity)
 {
 	glm::vec2 gridPos = tileMap->m_getGridPos(glm::vec2(entity.m_position.x,entity.m_position.y));
 
+	// check for every tile around the player for collision
 	for (int y = gridPos.y - 1; y < gridPos.y + 3; y++)
 	{
 		for (int x = gridPos.x - 1; x < gridPos.x + 3; x++)
@@ -78,49 +79,59 @@ void detectCol(Entity2D_Instaciaded& entity)
 				{
 					Rect entityRect = entity.m_getEntityRect();
 					Rect tileRect = tile->m_getEntityRect();
-					if (entityRect.previusPos.x + entityRect.size.x<= tileRect.pos.x ||
+
+					//checking if the player is colliding down with a tile
+					if (entityRect.pos.y + entityRect.size.y <= tileRect.pos.y ||
+						entityRect.pos.y + entityRect.size.y < tileRect.pos.y + (tileRect.size.y / 2) &&
+						entityRect.pos.y + entityRect.size.y > tile->m_position.y)
+					{
+						entity.m_previusPos.y = tile->m_position.y - entity.m_getEntityRect().size.y - entity.m_getEntityRect().posOffset.y - 1;
+						entity.m_position.y = tile->m_position.y - entity.m_getEntityRect().size.y - entity.m_getEntityRect().posOffset.y;
+						entity.m_grounded = true;
+
+					}
+					//cheking if is colliding with a tile in the top
+					else if (entityRect.previusPos.y + entity.m_posOffsetRect.y >= 
+						tileRect.pos.y + tileRect.size.y &&
+						entityRect.pos.y < tile->m_position.y + tile->m_size.y)
+					{
+						entity.m_previusPos.y = tile->m_position.y + tile->m_size.y - entity.m_getEntityRect().posOffset.y + 1;
+						entity.m_position.y = tile->m_position.y + tile->m_size.y - entity.m_getEntityRect().posOffset.y;
+
+					}
+					//cheking if is colliding in the right with a tile
+					else if (entityRect.previusPos.x + entityRect.size.x<= tileRect.pos.x ||
 						entityRect.previusPos.x + entityRect.size.x < tileRect.pos.x + (tileRect.size.x / 2)
-						&& entityRect.pos.x + entityRect.size.x > tileRect.pos.x ||
-						entityRect.pos.x + entityRect.size.x > tileRect.pos.x + tileRect.size.x)
+						&& entityRect.pos.x + entityRect.size.x > tileRect.pos.x )
 					{
 						entity.m_color = glm::vec4(0.5, 1.0, 0.7, 1.0f);
-						entity.m_previusPos.x = tile->m_position.x - entity.m_size.x - 1;
-						entity.m_position.x = tile->m_position.x - entity.m_size.x;
+						entity.m_previusPos.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x - 1;
+						entity.m_position.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x;
+						
 						entity.m_wallTouch = true;
 						entity.m_right = true;
 						entity.m_left = false;
 						
 					}
-					else if (entity.m_previusPos.x >= tile->m_position.x + tile->m_size.x &&
-						entity.m_position.x < tile->m_position.x + tile->m_size.x)
+					//cheking if its colliding in the left
+					else if (entityRect.previusPos.x + entity.m_posOffsetRect.x >= tileRect.pos.x + tileRect.size.x ||
+						entityRect.previusPos.x + entity.m_posOffsetRect.x > tileRect.pos.x + (tileRect.size.x / 2) &&
+						entityRect.pos.x + entity.m_posOffsetRect.x > tileRect.pos.x + tileRect.size.x)
 					{
+						
 						entity.m_color = glm::vec4(0.5, 1.0, 0.7, 1.0f);
-						entity.m_previusPos.x = tile->m_position.x + tile->m_size.x + 1;
-						entity.m_position.x = tile->m_position.x + tile->m_size.x;
+						entity.m_previusPos.x = tile->m_position.x + tile->m_size.x - entity.m_getEntityRect().posOffset.x  + 1;
+						entity.m_position.x = tile->m_position.x + tile->m_size.x - entity.m_getEntityRect().posOffset.x ;
 						entity.m_wallTouch = true;
 						entity.m_left = true;
 						entity.m_right = false;
 						
 					}
-					else if (entity.m_previusPos.y + entity.m_size.y <= tile->m_position.y &&
-						entity.m_position.y + entity.m_size.y > tile->m_position.y)
-					{
-						entity.m_previusPos.y = tile->m_position.y - entity.m_size.y - 1;
-						entity.m_position.y = tile->m_position.y - entity.m_size.y;
-						entity.m_grounded = true;
-
-					}
-					else if (entity.m_previusPos.y >= tile->m_position.y + tile->m_size.y &&
-						entity.m_position.y < tile->m_position.y + tile->m_size.y)
-					{
-						entity.m_previusPos.y = tile->m_position.y + tile->m_size.y + 1;
-						entity.m_position.y = tile->m_position.y + tile->m_size.y;
-
-					}
+					
 
 
 				}
-				
+				//if is colliding with a tile but no pushing agains it then we set the walltouch to false
 				if (entity.m_wallTouch && !entity.m_pushed)
 				{
 					entity.m_color = glm::vec4(1.0f);
@@ -128,48 +139,59 @@ void detectCol(Entity2D_Instaciaded& entity)
 					entity.m_left = false;
 					entity.m_right = false;
 				}
-				if (x == gridPos.x - 1 && y == gridPos.y && entity.m_position.x - 0.1 > tile->m_position.x + tile->m_size.x &&
+				if (x == gridPos.x - 1 && y == gridPos.y && 
+					entity.m_position.x - 0.1 > tile->m_position.x + tile->m_size.x &&
 					entity.m_wallTouch && entity.m_pushed)
 				{
+					// if the player is not touching anymore the wall to his left, is set to false 
+					// the wall touch is set to false
 					entity.m_wallTouch = false;
 					entity.m_left = false;
 					entity.m_color = glm::vec4(1.0f);
 				}
-				else if (x == gridPos.x + 2 && y == gridPos.y && entity.m_position.x + entity.m_size.x + 0.1 < tile->m_position.x &&
+				// if the player is not touching the wall to his right
+				else if (x == gridPos.x + 2 && y == gridPos.y &&
+					entity.m_position.x + entity.m_size.x + 0.1 < tile->m_position.x &&
 					entity.m_wallTouch && entity.m_pushed)
 				{
 					entity.m_wallTouch = false;
 					entity.m_right = false;
 					entity.m_color = glm::vec4(1.0f);
 				}
-				
+				// if the player is not touching the tile down of his pos
+				if (y == gridPos.y + 2 && x == gridPos.x && tile && tile->m_isVisible() &&
+					entity.m_getEntityRect().pos.y + entity.m_getEntityRect().size.y + 0.1 <
+					tile->m_position.y)
+				{
+					entity.m_grounded = false;
+				}
 
 
 			}
-			
-			if (((x == gridPos.x - 1 && y == gridPos.y) && (!tile || !tile->m_isVisible())) && !entity.m_right)
+			// if there is not a tile in the left and the player did not touch something in the right
+			if (((x == gridPos.x - 1 && y == gridPos.y) && (!tile || !tile->m_isVisible())) &&
+				!entity.m_right)
 			{
 				entity.m_wallTouch = false;
 				entity.m_left = false;
 				entity.m_color = glm::vec4(1.0f);
 
 			}
-			else if (((x == gridPos.x + 2 && y == gridPos.y) && (!tile || !tile->m_isVisible())) && !entity.m_left)
+			// if there is not a tile in the right and the player did not touch somethinf in the left
+			else if (((x == gridPos.x + 2 && y == gridPos.y) && (!tile || !tile->m_isVisible())) &&
+				!entity.m_left)
 			{
 				entity.m_wallTouch = false;
 				entity.m_right = false;
 				entity.m_color = glm::vec4(1.0f);
 			}
-			if (y == gridPos.y + 1 && x == gridPos.x && !tile)
+			// if there is not a tile under the player
+			if (y == gridPos.y + 2 && x == gridPos.x && !tile)
 				entity.m_grounded = false;
-			
-			else if (y == gridPos.y + 2 && x == gridPos.x && tile && !tile->m_isVisible() &&
-				entity.m_position.y + entity.m_size.y + 0.1 > tile->m_position.y &&
-				entity.m_position.x >= tile->m_position.x)
-			{
+			// if there is a tile but is not visible
+			else if(y == gridPos.y + 2 && x == gridPos.x && tile && !tile->m_isVisible())
 				entity.m_grounded = false;
-			}
-			
+
 		}
 	}
 }
@@ -185,6 +207,8 @@ SandBox::~SandBox() {
 	//delete spriteRenderer;
 	delete spriteRendererDebugQuad;
 	delete spriteRendererInstanced;
+	delete spriteRendererDebugQuadPlayer;
+	delete spriteRendererInstancedPlayer;
 	delete spriteRendererInstancedTile;
 	delete rendererGridMap;
 	delete tileMap;
@@ -209,18 +233,26 @@ void SandBox::initSandBox(int width, int height) {
 	worldGrid = glm::vec2(widthProjection / tileSize, heightProjection / tileSize);
 	
 
-	
+	// this object will help to create a editable tile map in scene
+	// this i should extend to have differents tilemaps sections to have greaters levels with
+	// the sections conecteds
+	// the tiles in the tile map will interact with the player
 	tileMap = new TileMap(worldGrid, tileSize);
 
 	
 	//glm::mat4 persperctiveMat = glm::perspective()
-	//this is the main shader for rendering all the entities objecs, player, npcs or enemies, and enviroment objects
 	
+
 	shaderIntancing = Shader("../shaders/rendererInstancing/Instancing.vs",
 		"../shaders/rendererInstancing/renderer.frag");
 	shaderIntancing.use().setMat4("projection", projection);
 	shaderIntancing.use().setInt("texture0", 0);
 	shaderIntancing.use().setInt("texture1", 1);
+	
+	shaderPlayer = Shader("../shaders/player/player.vs",
+		"../shaders/player/player.frag");
+	shaderPlayer.use().setMat4("projection", projection);
+	shaderPlayer.use().setInt("texture0", 0);
 
 	shaderDebugQuad = Shader("../shaders/renderDebugQuad/debugQuad.vertex",
 		"../shaders/renderDebugQuad/debugQuad.fragment");
@@ -231,23 +263,21 @@ void SandBox::initSandBox(int width, int height) {
 	shaderGrid.use().setMat4("projection", projection);
 
 
+	//the differents renderers to draw x or y elements on screen
+	spriteRendererInstanced = new SpriteRendererInstanced(shaderIntancing,"Entities");
+	spriteRendererInstancedPlayer = new SpriteRendererInstanced(shaderPlayer,"Player");
+	spriteRendererInstancedTile = new SpriteRendererInstanced(shaderIntancing,"Tiles");
 
-	//spriteRenderer = new SpriteRenderer(shaderP);
-	spriteRendererInstanced = new SpriteRendererInstanced(shaderIntancing);
-	spriteRendererInstancedTile = new SpriteRendererInstanced(shaderIntancing);
-	spriteRendererDebugQuad = new rendererDebugQuad(shaderDebugQuad);
+	spriteRendererDebugQuad = new rendererDebugQuad(shaderDebugQuad, "Entities");
+	spriteRendererDebugQuadPlayer = new rendererDebugQuad(shaderDebugQuad, "Player");
 	rendererGridMap = new RendererGridTileMap(shaderGrid,glm::vec4(1.0f));
 
-	this->startRender = false;
-	
+
 	
 
-	//entities.reserve(100);
+	// list of entities in the scene
 	entitiesInstanced.reserve(100);
 	
-	vertices.reserve(entities.capacity() * 4);
-	indices.reserve(entities.capacity() * 6);
-
 	Texture2D textCat;
 	textCat.load("../resources/textures/cat/Cat-Sprite-Sheet.png", true,0);
 	Texture2D text2;
@@ -256,6 +286,8 @@ void SandBox::initSandBox(int width, int height) {
 	textures.reserve(2);
 	textures.emplace_back(textCat);
 	textures.emplace_back(text2);
+	playerTex.reserve(1);
+	playerTex.emplace_back(textCat);
 	
 
 	
@@ -269,22 +301,42 @@ void SandBox::initRenderData() {
 	
 
 	
-	player = new Player(instanceEntity_index, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(16.0f), glm::vec4(1.0f),
-		(float)textures[0].slot);
-	Entity2D_Instaciaded entity_in2(instanceEntity_index, glm::vec3(150.0f, 50.0f, 0.0f), glm::vec2(8.0f),
-		glm::vec4(0.1f,0.5f,1.0f,1.0f), (float)textures[1].slot,glm::vec2(0.0f), glm::vec2(1.0f));
-	Entity2D_Instaciaded entity_in3(instanceEntity_index,glm::vec3(100.0f,100.0f,0.0f),glm::vec2(8.0f),
+	player = new Player(&instanceEntity_index, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(16.0f), glm::vec4(1.0f), glm::vec2(5.0f,3.0f),
+		glm::vec2(-8.0f,-4.0f), (float)textures[0].slot);
+	Entity2D_Instaciaded entity_in2(&instanceEntity_index, glm::vec3(150.0f, 50.0f, 0.0f), glm::vec2(8.0f),
+		glm::vec4(0.1f,0.5f,1.0f,1.0f));
+	Entity2D_Instaciaded entity_in3(&instanceEntity_index,glm::vec3(100.0f,100.0f,0.0f),glm::vec2(8.0f),
 		glm::vec4(0.5f,0.6f,0.7f,1.0f));
 
-	entitiesInstanced.emplace_back(*player);
+	
+	// we put the entities that the player will interact in the entitiesInstanced vector
 	entitiesInstanced.emplace_back(entity_in2);
 	entitiesInstanced.emplace_back(entity_in3);
 
-	spriteRendererInstanced->reserveBuffer();
+	// reserving buffer for the entites to render in scene
+	spriteRendererInstanced->reserveBuffer(100);
+
+	//filling the buffer with the data of entities to render
+	spriteRendererInstanced->addEntity(*player);
 	spriteRendererInstanced->initFillData(entitiesInstanced);
-	spriteRendererInstancedTile->reserveBuffer();
-	spriteRendererDebugQuad->reserveData();
+	
+	//The next two lines of code are commented, I would like to use a renderer just for the player
+	// but therer is a bug, when i updated data just for the player, it does too for the renderer of 
+	// the entities, and i don't know why, but for know i would leave this way
+	/*spriteRendererInstancedPlayer->reserveBuffer(1);
+	spriteRendererInstancedPlayer->addEntity(*player);*/
+
+	//the renderer for the tiles to render
+	spriteRendererInstancedTile->reserveBuffer(400);
+	
+	//A renderer just for draw quads for debuging and see the rect hitboxes of the entities
+	spriteRendererDebugQuad->reserveData(100);
 	spriteRendererDebugQuad->initData(entitiesInstanced);
+	
+	//a renderer to see the hitbox of the player only
+	spriteRendererDebugQuadPlayer->reserveData(1);
+
+	//a renderer just to show the grid of the tile map
 	rendererGridMap->initBufferData();
 	rendererGridMap->fillBufferData(tileSize, tileMap->getWidth(), tileMap->getHeight());
 }
@@ -294,6 +346,7 @@ void SandBox::initRenderData() {
 void SandBox::processInput(float dt) {
 	glm::mat4 model(1.0f);
 
+	// camera control
 	if (this->keys[GLFW_KEY_RIGHT]) {
 		camera.ProcessKeyBoard(RIGHT, dt);
 	}
@@ -308,6 +361,7 @@ void SandBox::processInput(float dt) {
 	{
 		camera.ProcessKeyBoard(DOWN, dt);
 	}
+	// player control
 	static float runAcceleration = 240.0f;
 	constexpr float runReduce = 280.0f;
 	constexpr float gravity = 9.8f;
@@ -335,12 +389,19 @@ void SandBox::processInput(float dt) {
 		
 	}
 	if (this->keys[GLFW_KEY_A]) {
-		
+		// this for the movement in the negative side of the x axis, and if mult is to change much faster 
+		// the vel to the positive to the negative side
+
 		float mult = 1.0f;
+		
+		// if the player is grounded or the gravity is not affecting and the speed was in the positive side
+		// will change drastically to the negative
 		if (player->m_speed.x > 0.0f && player->m_grounded || player->m_speed.x > 0.0f && !this->m_gravityInfluence)
 			mult = 100.0f;
+		// if the player is touching a wall it will change but not that quickly like the firts if statement
 		else if (player->m_wallTouch)
 			mult = 7.0f;
+		// if is on the air it will be much lower
 		else
 			mult = 2.0f;
 
@@ -360,11 +421,15 @@ void SandBox::processInput(float dt) {
 	}
 	if(!this->keys[GLFW_KEY_D] && ! this->keys[GLFW_KEY_A])
 	{
+		// reduce the vel on the x axis y we don't push the player in the positive or negative side 
+		// of the axis
 		player->m_pushed = false;
 		player->m_speed.x = byPowerMath::approach(player->m_speed.x, 0, runReduce * dt);
 	
 	}
 	if (this->keys[GLFW_KEY_W] && !this->m_gravityInfluence) {
+
+		// moving negative in the y axis if there is not gravity influence
 
 		float mult = 1.0f;
 		if (player->m_speed.y > 0.0f)
@@ -377,6 +442,7 @@ void SandBox::processInput(float dt) {
 	}
 	if (this->keys[GLFW_KEY_S] && !this->m_gravityInfluence) {
 
+		// move positive in the y axis, flying if there is not gravity influence
 		float mult = 1.0f;
 		if (player->m_speed.y < 0.0f)
 
@@ -387,12 +453,15 @@ void SandBox::processInput(float dt) {
 	}
 	if (this->keys[GLFW_KEY_SPACE] && !this->keyProcessed[GLFW_KEY_SPACE] && this->m_gravityInfluence&& player->m_grounded)
 	{
+		// jump if is grounded 
 		this->keyProcessed[GLFW_KEY_SPACE] = true;
 		player->m_speed.y = -80;
 		player->m_grounded = false;
 	}
-	else if (this->keys[GLFW_KEY_SPACE] && !this->keyProcessed[GLFW_KEY_SPACE] && this->m_gravityInfluence && player->m_wallTouch)
+	else if (this->keys[GLFW_KEY_SPACE] && !this->keyProcessed[GLFW_KEY_SPACE] &&
+		this->m_gravityInfluence && player->m_wallTouch && !player->m_grounded)
 	{
+		// if the player is pushed against a wall and did not jump and is not grounded can do a wall jump
 		this->keyProcessed[GLFW_KEY_SPACE] = true;
 		player->m_speed.y = -45;
 		player->m_speed.x = 0.0f;
@@ -400,29 +469,39 @@ void SandBox::processInput(float dt) {
 	}
 	if (!this->keys[GLFW_KEY_W]  && !this->keys[GLFW_KEY_S] && !this->m_gravityInfluence)
 	{
+		// if therer is not gravity influence need to reduce his vel in the y axis
 		player->m_speed.y = byPowerMath::approach(player->m_speed.y, 0, runReduce * dt);
 
 	}
 	else if (this->m_gravityInfluence && !player->m_grounded) {
 
+		// affect the player by the gravity depending if is sliding in a wall or not
+		// if have friction with a wall, meaning is pushing against a wall the gravity will 
+		// be lower
+
 		bool get_positiveSpeed = player->m_speed.y >= 0.0f;
 
 		float actualGravity = player->m_wallTouch && get_positiveSpeed ? gravity * 3 : gravity * 12;
-		actualGravity = player->m_pushed ? gravity * 15 : actualGravity;
+		actualGravity = !player->m_pushed ? gravity * 15 : actualGravity;
 
 		player->m_speed.y = byPowerMath::approach(player->m_speed.y, player->m_maxSpeed * 2.0f,
 			actualGravity * dt);
 	}
+	// if the player is grounded therer is not gravity affecting him
 	else if (this->m_gravityInfluence && player->m_grounded)
 		player->m_speed.y = 0.0f;
 
 	
 	player->move(dt);
-	detectCol(*player);
-	spriteRendererInstanced->updateEntity(*player);
-	if (this->m_showEntitiesQuads)
-		spriteRendererDebugQuad->updateData(*player);
+	detectTileCol(*player);
 	
+	spriteRendererInstanced->updateEntity(*player);
+	
+
+	if (player->m_returnVisibilityHitbox())
+		spriteRendererDebugQuadPlayer->updateData(*player);
+	else if (!player->m_returnVisibilityHitbox())
+		spriteRendererDebugQuadPlayer->emptyData();
 
 	if (this->keys[GLFW_MOUSE_BUTTON_1])
 	{	
@@ -457,12 +536,14 @@ void SandBox::processInput(float dt) {
 
 void SandBox::setCameraScroll(float yoffset) {
 
+	// set the zoom of the camera 
 	camera.processMouseScroll(yoffset);
 
 }
 
 void SandBox::GetMousePos(glm::vec2 pos)
 {	
+	// this gets the mouse pos in screen
 	this->m_mousePosScreen = glm::vec2(pos.x / 6, pos.y / 6);
 	
 }
@@ -478,14 +559,15 @@ void SandBox::updateMousePos()
 void SandBox::update(float& dt) {
 	this->updateMousePos();
 	this->updateEntities(dt);
-	this->time += dt;
-
+	
 	
 	// the next commented line update the render buffer to render tiles
 	// it goes throught a matrix to see the tiles that are visible and add to a list
 	// to pass to feed the render buffer
 	//tileMap->m_updateTilesBufferRenderer(*spriteRendererInstancedTile);
 
+	// this is to animate the player changing his texCoords, i will extend this to make it better 
+	// in the entity2D_instanced class
 	if (player->m_texCoords.position.x >= 96.0f)
 		player->m_texCoords.position.x = 0.0f;
 	else if (animTime > 0.5f) {
@@ -498,7 +580,6 @@ void SandBox::update(float& dt) {
 	}
 	
 	
-	//spriteRendererInstanced->scaleSingleEntity(entitiesInstanced[0], scale,camera.Zoom);
 }
 
 //This update all the entities where the player has no control,npcs or enemies
@@ -511,20 +592,16 @@ void SandBox::updateEntities(float& dt) {
 
 void SandBox::renderGUI() {
 
-	
+	//This is where all the gui elements are called to created and render
 	
 	//gui.useSliderForVec2("Vec for change y and x texCoords", entities[0].maxTexCoords);
-	gui.showVec("player pos", player->m_position);
-	gui.showVec("player speed", player->m_speed);
-	gui.showVec("camera", camera.pos);
-	
+	gui.showVec("camera", camera.pos,NULL);
+	gui.m_DebugPlayer(*player);
+
 	gui.showVec("globalMousePos", glm::vec3(this->m_mousePosGlobal,0.0f));
 	gui.enableTileMapEditing(this->m_enableTileMapEditing, this->m_showGridMap);
 	gui.enableBool("gravity influence", this->m_gravityInfluence);
 	gui.enableBool("Show entities quads", this->m_showEntitiesQuads);
-	gui.showBoolVar("Pushed player", player->m_pushed);
-	gui.showBoolVar("Wall Touch player", player->m_wallTouch);
-	float xRightPos = player->m_position.x + player->m_size.x;
 	
 	
 	//gui.enableBool("showGrid", this->m_showGridMap);
@@ -534,15 +611,22 @@ void SandBox::renderGUI() {
 
 }
 
-void SandBox::renderScene(float dt) {
+void SandBox::renderScene() {
 
 	//spriteRenderer->draw(vertices, indices, camera, textures);
 	
 	if (m_showGridMap)
 		rendererGridMap->draw(camera);
-	spriteRendererInstancedTile->draw(camera, textures, "renderTiles");
-	spriteRendererInstanced->draw(camera,textures,"renderEntities");
-	if(this->m_showEntitiesQuads)
+
+	spriteRendererInstancedTile->draw(camera, tilesTex);
+	spriteRendererInstanced->draw(camera,textures);
+	if (player->m_returnVisibilityHitbox())
+		spriteRendererDebugQuadPlayer->draw(camera);
+	if (this->m_showEntitiesQuads)
+	{
+		
 		spriteRendererDebugQuad->draw(camera);
+
+	}
 }
 

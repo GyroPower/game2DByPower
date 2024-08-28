@@ -102,6 +102,8 @@ public:
 	glm::vec4 m_color;
 	TexCoords m_texCoords;
 	glm::vec2 m_texOffset;
+	glm::vec2 m_posOffsetRect;
+	glm::vec2 m_sizeOffsetRect;
 	int m_entityIndex;
 	int m_renderInstanceIndex;
 	EntityState state;
@@ -112,8 +114,8 @@ public:
 	bool m_right;
 	bool m_left;
 
-	Entity2D_Instaciaded(int& renderIndex, glm::vec3 position = glm::vec3(0.0f), glm::vec2 size = glm::vec2(10.0f),
-		glm::vec4 color = glm::vec4(1.0f), float texSlot = -1.0f, glm::vec2 texPos = glm::vec2(0.0f),
+	Entity2D_Instaciaded(int* renderIndex = nullptr, glm::vec3 position = glm::vec3(0.0f), glm::vec2 size = glm::vec2(10.0f),
+		glm::vec4 color = glm::vec4(1.0f), glm::vec2 posOffsetRect = glm::vec2(0.0f), glm::vec2 sizeOffsetRect = glm::vec2(0.0f), float texSlot = -1.0f, glm::vec2 texPos = glm::vec2(0.0f),
 		glm::vec2 texSize = glm::vec2(16.0f));
 
 	~Entity2D_Instaciaded();
@@ -132,7 +134,7 @@ class Tile : public Entity2D_Instaciaded {
 	
 
 public:
-	Tile(int& renderIndex,glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2 size = glm::vec2(16.0f),
+	Tile(int* renderIndex,glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2 size = glm::vec2(16.0f),
 		glm::vec4 color = glm::vec4(0.5f,1.0f,1.0f,1.0f), bool visible = false);
 	~Tile();
 	//Tile render instance helps to give a index in the vector to pass just to render the visibles ones

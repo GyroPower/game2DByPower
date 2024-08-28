@@ -38,7 +38,7 @@ public:
 	void initRenderData();
 	void update(float& dt);
 	void updateEntities(float& dt);
-	void renderScene(float dt);
+	void renderScene();
 	void initSandBox(int width, int height);
 	
 };

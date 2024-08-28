@@ -9,5 +9,8 @@
 #define LOGVEC2(name, x) std::cout<< name << "x = "<<x.x << "y = "<< x.y << "\n"
 #define LOGVEC3(name, vec) std::cout<<name<<"x="<<vec.x << " y="<<vec.y<<" z="<<vec.z<<"\n"
 #else
-#define LOG(x,v)
+#define LOG(x)
+#define LOGVAR(x,v)
+#define LOGVEC2(name, x)
+#define LOGVEC3(name, vec)
 #endif

@@ -20,20 +20,21 @@ private:
 	unsigned int VAO;
 	unsigned int IBO;
 	unsigned int VBO;
+	bool initRender = false;
 };
 
 class SpriteRendererInstanced {
 public:
-	SpriteRendererInstanced(Shader& shader);
+	SpriteRendererInstanced(Shader& shader, std::string rendererName);
 	~SpriteRendererInstanced();
 
-	void reserveBuffer();
+	void reserveBuffer(int sizeToReserve = 1000);
 	void initFillData(std::vector<Entity2D_Instaciaded>& entities);
 	void updateEntity(Entity2D_Instaciaded& entity);
 	void addEntity(Entity2D_Instaciaded& entity);
 	void emptyEntityData(Entity2D_Instaciaded& entity);
 	void emptyAllData();
-	void draw(Camera& camera,std::vector<Texture2D> textures,const char* rendererName);
+	void draw(Camera& camera,std::vector<Texture2D> textures);
 	void scaleSingleEntity(Entity2D_Instaciaded& entity, float& scale, Camera& cam);
 
 private:
@@ -45,7 +46,9 @@ private:
 	GLuint VBO_Tex;
 	GLuint IBO;
 	GLuint VBO_Tex_Coords;
+	std::string renderName;
 
 	int instances;
-	
+	int m_sizeReserved = 0;
+	bool m_initRender = false;
 };

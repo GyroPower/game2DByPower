@@ -2,8 +2,8 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<iostream>
 
-rendererDebugQuad::rendererDebugQuad(Shader& shader)
-	:m_shader(shader)
+rendererDebugQuad::rendererDebugQuad(Shader& shader, std::string Name)
+	:m_shader(shader), m_rendererName(Name)
 {
 
 	glGenVertexArrays(1, &this->m_VAO);
@@ -15,7 +15,8 @@ rendererDebugQuad::rendererDebugQuad(Shader& shader)
 rendererDebugQuad::~rendererDebugQuad() 
 {}
 
-void rendererDebugQuad::reserveData() {
+void rendererDebugQuad::reserveData(int sizeToReserve) {
+	this->m_sizeReserved = sizeToReserve;
 	std::vector<glm::vec3> vertices;
 	std::vector<GLuint> indices;
 	indices.reserve(5);
@@ -46,13 +47,13 @@ void rendererDebugQuad::reserveData() {
 	
 
 	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_color);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * 1000, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * this->m_sizeReserved, nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(3);
 	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
 	glVertexAttribDivisor(3, 1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_pos);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * 1000, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * this->m_sizeReserved, nullptr, GL_DYNAMIC_DRAW);
 
 	glEnableVertexAttribArray(4);
 	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, vec4Size * 4, (void*)0);
@@ -95,21 +96,25 @@ void rendererDebugQuad::initData(std::vector<Entity2D_Instaciaded>& entities) {
 		colors.emplace_back(entities[i].m_color);
 	}
 
+	int offsetColor = this->m_instances > 0 ? sizeof(glm::vec4) : 0;
+	int offsetPos = this->m_instances > 0 ? sizeof(glm::mat4) : 0;
+
+	glBindVertexArray(this->m_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_color);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, (sizeof(glm::vec4) * entities.size()), &colors[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, offsetColor, (sizeof(glm::vec4) * entities.size()), &colors[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_pos);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, (sizeof(glm::mat4) * entities.size()), &modelMat4[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, offsetPos, (sizeof(glm::mat4) * entities.size()), &modelMat4[0]);
 
-	this->m_instances = entities.size();
+	this->m_instances = this->m_instances == 0 ? entities.size() : this->m_instances + entities.size();
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+	glBindVertexArray(0);
 }
 
 void rendererDebugQuad::draw(Camera& camera) {
 #if DEBUG
 	if (!m_initRender)
 	{
-		std::cout << "render debug quad\n";
+		std::cout << "render debug quad: " << this->m_rendererName << "\n";
 		
 		m_initRender = true;
 	}
@@ -129,6 +134,7 @@ void rendererDebugQuad::draw(Camera& camera) {
 
 void rendererDebugQuad::updateData(Entity2D_Instaciaded& entity) 
 {
+	glBindVertexArray(this->m_VAO);
 	glm::mat4 model(1.0f);
 	Rect entityRect = entity.m_getEntityRect();
 	model = glm::translate(model, glm::vec3(entityRect.pos,0.0f));
@@ -138,4 +144,18 @@ void rendererDebugQuad::updateData(Entity2D_Instaciaded& entity)
 	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_color);
 	glBufferSubData(GL_ARRAY_BUFFER, (sizeof(glm::vec4) * entity.m_returnRenderIndex()), sizeof(glm::vec4), &entity.m_color);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	if (this->m_instances == 0.0)
+		this->m_instances = 1;
+}
+
+void rendererDebugQuad::emptyData()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_pos);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::mat4) * this->m_sizeReserved, nullptr);
+	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_color);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec4) * this->m_sizeReserved, nullptr);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	this->m_instances = 0;
 }

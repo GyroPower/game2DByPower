@@ -16,7 +16,7 @@ TileMap::TileMap(glm::vec2 mapSize, int tileSize)
 		for (int x = 0; x <= (int)m_mapSize.x; x++)
 		{
 			int meanTimeRenderIndex = -1;
-			columns.emplace_back(Tile(meanTimeRenderIndex, glm::vec3(x * this->m_tileSize, y * this->m_tileSize, 0.0f),
+			columns.emplace_back(Tile(&meanTimeRenderIndex, glm::vec3(x * this->m_tileSize, y * this->m_tileSize, 0.0f),
 				glm::vec2(this->m_tileSize)));
 
 		}
@@ -70,7 +70,6 @@ void TileMap::m_addTileToRender(glm::vec3 wordlPos)
 
 	if (tile && !tile->m_isVisible())
 	{
-		
 		tile->m_setVisible(true, this->m_tileRenderIndex);
 		this->m_tilesToRender.emplace_back(*tile);
 

@@ -1,15 +1,16 @@
-project "Game-UI"
+project "Game-GUI"
     kind "StaticLib"
     language "C++"
     cppdialect "C++14"
     targetdir "Binaries/%{cfg.buildcfg}"
     staticruntime "off"
 
-    files {"UI/**.h","UI/**.cpp"}
+    files {"GUI/**.h","GUI/**.cpp"}
 
-    includedirs {"./","../Game-External-Libraries/include"}
+    includedirs {"./","../Game-External-Libraries/include","../Game-Core",
+    "../Game-External-Libraries/include/glad/include"}
 
-    links {"Game-External-Libraries"}
+    links {"Game-External-Libraries","Game-Core"}
 
     targetdir ("../Binaries/"..OutputDir.."/%{prj.name}")
     objdir ("../Binaries/Intermediates/"..OutputDir.."/%{prj.name}")

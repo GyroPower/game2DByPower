@@ -9,9 +9,9 @@ project "Game-App"
 
     includedirs {"./", "../Game-External-Libraries/include",
     "../Game-External-Libraries/include/glad/include",
-                "../Game-Core", "../Game-UI"}
+                "../Game-Core", "../Game-GUI"}
 
-    links {"Game-Core","Game-External-Libraries","Game-UI"}
+    links {"Game-Core","Game-External-Libraries","Game-GUI"}
 
     targetdir ("../Binaries/"..OutputDir.."/%{prj.name}")
     objdir ("../Binaries/Intermediates/"..OutputDir.."/%{prj.name}")

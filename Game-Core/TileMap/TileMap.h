@@ -33,4 +33,5 @@ public:
 	void m_updateTilesBufferRenderer(SpriteRendererInstanced& tileRenderer);
 	void m_deleteTileFromRender(glm::vec3 worldPos);
 	void m_updateTileRenderBuffer(SpriteRendererInstanced& tileRenderer);
+	
 };

@@ -19,6 +19,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mode);
 
+// This project needs to be document better, there is alot to explain and give a hint of for what is use
+// something, i will extend this more.
+// but the goal of the project is to give an interface to quickly developt a 2d game with classes 
+// for the entities and the renderer and tile maps to create levels, it needs to be more extended and 
+// change somethings for be more flexible 
+
+
 int main() {
 
 	if (!glfwInit())
@@ -32,7 +39,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LEARNING BATCH RENDERING", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "game2DByPower", nullptr, nullptr);
 
 
 	if (window == nullptr)
@@ -60,7 +67,7 @@ int main() {
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	/*io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;*/
 
 	ImGui::StyleColorsDark();
 
@@ -101,7 +108,7 @@ int main() {
 		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		sandbox.renderScene(deltaTime);
+		sandbox.renderScene();
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);

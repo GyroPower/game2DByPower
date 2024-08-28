@@ -1,5 +1,5 @@
 #pragma once
-#include<glad/gl.h>
+#include<glad/include/glad/gl.h>
 
 class Texture2D {
 

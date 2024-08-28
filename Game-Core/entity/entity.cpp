@@ -51,19 +51,33 @@ void Entity2D::updateTopRightTexCoords() {
 //Entity2D instanced class
 ////////////////////////////
 
+//This is to have seperate the render and entity index, if a entity exists but is not redered well, the render index
+//is set to other value, just to have track of the gpu memory and change it if the entity is visible or not and render
+//it
 static int entityIndex = 0;
 
-Entity2D_Instaciaded::Entity2D_Instaciaded(int& renderIndex, glm::vec3 position, glm::vec2 size,
-	glm::vec4 color, float texSlot, glm::vec2 texPos,
+Entity2D_Instaciaded::Entity2D_Instaciaded(int* renderIndex, glm::vec3 position, glm::vec2 size,
+	glm::vec4 color, glm::vec2 posOffsetRect, glm::vec2 sizeOffsetRect, float texSlot, glm::vec2 texPos,
 	glm::vec2 texSize)
 	: m_color(color), m_position(position), m_size(size), texSlot(texSlot), m_entityIndex(entityIndex),
 	m_texCoords(texPos, texSize),m_texOffset(glm::vec2(0.0f)), m_maxSpeed(120.0f),m_previusPos(position),
-	m_grounded(false), m_speed(0.0f),m_wallTouch(false), m_pushed(false),m_right(false), m_left(false),state(IDLE)
+	m_grounded(false), m_speed(0.0f),m_wallTouch(false), m_pushed(false),m_right(false), m_left(false),state(IDLE), 
+	m_posOffsetRect(posOffsetRect), m_sizeOffsetRect(sizeOffsetRect)
 {
 	this->direction = glm::vec3(0.0f);
-	this->m_renderInstanceIndex = renderIndex;
+
+	if (renderIndex)
+	{
+
+		this->m_renderInstanceIndex = *renderIndex;
+		
+		*renderIndex+=1;
+	}
+	else
+		this->m_renderInstanceIndex = 0;
+
 	entityIndex++;
-	renderIndex++;
+	
 	this->m_texCoords.position += m_texOffset;
 }
 
@@ -111,7 +125,7 @@ Rect Entity2D_Instaciaded::m_getEntityRect()
 //// Tile class
 ///////////////////////////////////
 
-Tile::Tile(int& renderIndex,glm::vec3 pos, glm::vec2 size, glm::vec4 color,bool visible) 
+Tile::Tile(int* renderIndex,glm::vec3 pos, glm::vec2 size, glm::vec4 color,bool visible) 
 	:m_visible(visible), Entity2D_Instaciaded(renderIndex, pos, size, color)
 {
 
