@@ -251,6 +251,13 @@ void SpriteRendererInstanced::updateEntity(Entity2D_Instaciaded& entity) {
 	this->renderName;
 	glm::mat4 model(1.0f);
 	model = glm::translate(model, entity.m_position);
+	if (entity.m_direction.x == -1.0f)
+	{
+		model = glm::translate(model, glm::vec3(0.5 * entity.m_size.x, 0.5 * entity.m_size.y, 0.0f));
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(-0.5 * entity.m_size.x, -0.5 * entity.m_size.y, 0.0f));
+
+	}
 	model = glm::scale(model, glm::vec3(entity.m_size, 1.0f));
 
 	glBindVertexArray(this->VAO);
@@ -349,13 +356,13 @@ void SpriteRendererInstanced::draw(Camera& camera, std::vector<Texture2D> textur
 #if DEBUG
 	if (!m_initRender)
 	{
-		std::cout << this->renderName <<"\n";
+		std::cout << "Render call: " << this->renderName << "\n";
 		m_initRender = true;
 	}
 #endif
+	
 	this->shader.use();
 	this->shader.setMat4("view", camera.getViewMatrix());
-	this->shader.setMat4("modelZoomCamera", camera.getZoomMatrix());
 	
 	for (int i = 0; i < textures.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + i);

@@ -13,9 +13,10 @@ public:
 	~Player();
 
 	
-	void m_animPlayer();
 	void m_setVisibilityHitbox(bool visibility);
 	bool m_returnVisibilityHitbox();
 
+	void move(float& dt);
+	void m_anim(float& dt);
 	Rect m_getEntityRect();
 };

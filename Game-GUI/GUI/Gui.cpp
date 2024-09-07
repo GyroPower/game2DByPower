@@ -132,6 +132,8 @@ void GUI::m_DebugPlayer(Player& player)
 	static bool showPlayerTouchWall = false;
 	static bool showPlayerGrounded = false;
 	static bool showHitbox = false;
+	static bool showLeftTouch = false;
+	static bool showRightTouch = false;
 
 	ImGui::Begin("Player debug", NULL, flags);
 
@@ -141,6 +143,8 @@ void GUI::m_DebugPlayer(Player& player)
 	ImGui::Checkbox("show Player is touching a wall", &showPlayerTouchWall);
 	ImGui::Checkbox("show Player is grounded", &showPlayerGrounded);
 	ImGui::Checkbox("show Player Hitbox", &showHitbox);
+	ImGui::Checkbox("Show Player left touch", &showLeftTouch);
+	ImGui::Checkbox("Show Player right touch", &showRightTouch);
 
 	if (player.m_returnVisibilityHitbox() != showHitbox)
 		player.m_setVisibilityHitbox(showHitbox);
@@ -152,7 +156,8 @@ void GUI::m_DebugPlayer(Player& player)
 	if (showPlayerHitboxPosPlusSize) this->showVec("Player hitbox plus size", glm::vec3(player.m_getEntityRect().pos + player.m_getEntityRect().size, 0.0), &showPlayerHitboxPosPlusSize);
 	if (showPlayerTouchWall) this->showBoolVar("Player touching a wall", player.m_wallTouch, &showPlayerTouchWall);
 	if (showPlayerGrounded) this->showBoolVar("Player is grounded", player.m_grounded, &showPlayerGrounded);
-
+	if (showLeftTouch) this->showBoolVar("Player left touch", player.m_left, &showLeftTouch);
+	if (showRightTouch) this->showBoolVar("Player right touch", player.m_right, &showRightTouch);
 
 	ImGui::End();
 

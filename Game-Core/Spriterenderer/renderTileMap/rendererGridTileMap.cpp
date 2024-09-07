@@ -98,13 +98,12 @@ void RendererGridTileMap::draw(Camera& camera)
 {
 #if DEBUG
 	if (!this->m_initRender) {
-		std::cout << "render grid\n";
+		std::cout<< "Draw call " << "render grid\n";
 		this->m_initRender = true;
 	}
 #endif
 	this->m_shader.use();
 	this->m_shader.setMat4("view", camera.getViewMatrix());
-	this->m_shader.setMat4("zoomMatrix", camera.getZoomMatrix());
 
 	glBindVertexArray(this->m_VAO);
 	glDrawElementsInstanced(GL_LINES, 8, GL_UNSIGNED_INT, 0, this->m_instances);

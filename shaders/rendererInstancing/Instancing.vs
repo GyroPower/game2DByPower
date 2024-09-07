@@ -31,7 +31,7 @@ void main()
 		vec2(left,bottom)
 	};
 
-	gl_Position = projection * view * modelZoomCamera * instanceMatrix * vec4(aPos.x,aPos.y,aPos.z,1.0f);
+	gl_Position = projection * view * instanceMatrix * vec4(aPos.x,aPos.y,aPos.z,1.0f);
 	TexCoords = textureCoords[gl_VertexID];
 	color = aColor;
 	texSlot = aTexSlot;

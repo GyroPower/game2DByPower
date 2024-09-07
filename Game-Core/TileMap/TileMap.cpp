@@ -5,7 +5,7 @@ TileMap::TileMap(glm::vec2 mapSize, int tileSize)
 	: m_mapSize(mapSize), m_tileSize(tileSize),m_tileRenderIndex(0)
 {
 	this->m_levelTileMap.reserve((int)this->m_mapSize.y);
-	this->m_tilesToRender.reserve(this->m_mapSize.y * this->m_mapSize.x);
+	this->m_tilesToRender.reserve((int)this->m_mapSize.y * (int)this->m_mapSize.x);
 
 	
 
@@ -18,7 +18,7 @@ TileMap::TileMap(glm::vec2 mapSize, int tileSize)
 			int meanTimeRenderIndex = -1;
 			columns.emplace_back(Tile(&meanTimeRenderIndex, glm::vec3(x * this->m_tileSize, y * this->m_tileSize, 0.0f),
 				glm::vec2(this->m_tileSize)));
-
+			
 		}
 		this->m_levelTileMap.emplace_back(columns);
 	}

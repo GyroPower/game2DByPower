@@ -12,6 +12,6 @@ out vec4 color;
 
 void main(){
 
-	gl_Position = projection * view * zoomMatrix * instanceModel * vec4(aPos.x, aPos.y, aPos.z, 1.0f);
+	gl_Position = projection * view * instanceModel * vec4(aPos.x, aPos.y, aPos.z, 1.0f);
 	color = aColor;
 }

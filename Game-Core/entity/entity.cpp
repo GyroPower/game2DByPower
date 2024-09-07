@@ -62,9 +62,9 @@ Entity2D_Instaciaded::Entity2D_Instaciaded(int* renderIndex, glm::vec3 position,
 	: m_color(color), m_position(position), m_size(size), texSlot(texSlot), m_entityIndex(entityIndex),
 	m_texCoords(texPos, texSize),m_texOffset(glm::vec2(0.0f)), m_maxSpeed(120.0f),m_previusPos(position),
 	m_grounded(false), m_speed(0.0f),m_wallTouch(false), m_pushed(false),m_right(false), m_left(false),state(IDLE), 
-	m_posOffsetRect(posOffsetRect), m_sizeOffsetRect(sizeOffsetRect)
+	m_posOffsetRect(posOffsetRect), m_sizeOffsetRect(sizeOffsetRect),m_animTimeLimit(0.5f),m_animTime(0.0f), m_top(false)
 {
-	this->direction = glm::vec3(0.0f);
+	this->m_direction = glm::vec3(0.0f);
 
 	if (renderIndex)
 	{
@@ -99,11 +99,7 @@ void Entity2D_Instaciaded::move(float& dt)
 {
 	this->m_previusPos = this->m_position;
 	
-	if (this->m_pushed)
-		this->state = MOVE;
-	else
-		this->state = IDLE;
-
+	
 	this->m_position += this->m_speed;
 
 	
@@ -119,6 +115,11 @@ void Entity2D_Instaciaded::setPosInterpolation(float& dt)
 Rect Entity2D_Instaciaded::m_getEntityRect()
 {
 	return Rect(this->m_position,this->m_size,this->m_previusPos);
+}
+
+void Entity2D_Instaciaded::m_anim(float& dt)
+{
+
 }
 
 ////////////////////////////////////

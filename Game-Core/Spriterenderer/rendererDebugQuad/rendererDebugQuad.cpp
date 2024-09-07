@@ -121,8 +121,7 @@ void rendererDebugQuad::draw(Camera& camera) {
 #endif
 	this->m_shader.use();
 	this->m_shader.setMat4("view", camera.getViewMatrix());
-	this->m_shader.setMat4("modelZoomCamera", camera.getZoomMatrix());
-
+	
 
 	glBindVertexArray(this->m_VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_IBO);
@@ -136,9 +135,9 @@ void rendererDebugQuad::updateData(Entity2D_Instaciaded& entity)
 {
 	glBindVertexArray(this->m_VAO);
 	glm::mat4 model(1.0f);
-	Rect entityRect = entity.m_getEntityRect();
-	model = glm::translate(model, glm::vec3(entityRect.pos,0.0f));
-	model = glm::scale(model, glm::vec3(entityRect.size, 1.0f));
+	//Rect entityRect = entity.m_getEntityRect();
+	model = glm::translate(model, glm::vec3(entity.m_getEntityRect().pos, 0.0f));
+	model = glm::scale(model, glm::vec3(entity.m_getEntityRect().size, 1.0f));
 	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_pos);
 	glBufferSubData(GL_ARRAY_BUFFER, (sizeof(glm::mat4) * entity.m_returnRenderIndex()), sizeof(glm::mat4), &model);
 	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_color);

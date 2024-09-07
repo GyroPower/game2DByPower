@@ -29,11 +29,12 @@ struct Rect {
 	glm::vec2 previusPos;
 	glm::vec2 pos;
 	glm::vec2 size;
+	bool col;
 
 	Rect(glm::vec2 _pos = glm::vec2(0.0f), glm::vec2 _size = glm::vec2(0.0f),
 		glm::vec2 _prevPos = glm::vec2(0.0f), glm::vec2 _posOffset = glm::vec2(0.0f),
 		glm::vec2 _sizeOffset = glm::vec2(0.0f))
-		:pos(_pos), size(_size), previusPos(_prevPos), posOffset(_posOffset), sizeOffset(_sizeOffset)
+		:pos(_pos), size(_size), previusPos(_prevPos), posOffset(_posOffset), sizeOffset(_sizeOffset), col(false)
 	{
 		if (this->posOffset.x != 0.0f || this->posOffset.y != 0.0f)
 		{
@@ -66,6 +67,7 @@ enum EntityState {
 	MOVE,
 	JUMP,
 	FALL,
+	WALL_TOUCH,
 };
 
 class Entity2D {
@@ -94,10 +96,12 @@ class Entity2D_Instaciaded {
 public:
 	float texSlot;
 	float m_maxSpeed;
+	float m_animTimeLimit;
+	float m_animTime;
 	glm::vec3 m_speed;
 	glm::vec3 m_position;
 	glm::vec3 m_previusPos;
-	glm::vec3 direction;
+	glm::vec3 m_direction;
 	glm::vec2 m_size;
 	glm::vec4 m_color;
 	TexCoords m_texCoords;
@@ -113,6 +117,7 @@ public:
 	bool m_pushed;
 	bool m_right;
 	bool m_left;
+	bool m_top;
 
 	Entity2D_Instaciaded(int* renderIndex = nullptr, glm::vec3 position = glm::vec3(0.0f), glm::vec2 size = glm::vec2(10.0f),
 		glm::vec4 color = glm::vec4(1.0f), glm::vec2 posOffsetRect = glm::vec2(0.0f), glm::vec2 sizeOffsetRect = glm::vec2(0.0f), float texSlot = -1.0f, glm::vec2 texPos = glm::vec2(0.0f),
@@ -122,9 +127,10 @@ public:
 
 	void setNewTexOffset(glm::vec2 newOffset);
 	int m_returnRenderIndex();
-	void move(float& dt);
 	void setPosInterpolation(float& dt);
-	
+
+	virtual void move(float& dt);
+	virtual void m_anim(float& dt);
 	virtual Rect m_getEntityRect();
 };
 

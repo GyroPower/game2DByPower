@@ -39,12 +39,16 @@ void Camera::processMouseScroll(float yoffset) {
 
 glm::mat4 Camera::getViewMatrix() {
 	
-	return glm::lookAt(this->pos, this->pos + this->front, this->up);
+	glm::mat4 lookMatrix = glm::lookAt(this->pos, this->pos + this->front, this->up);
+
+	lookMatrix = glm::scale(lookMatrix, glm::vec3(this->Zoom, this->Zoom, 1.0f));
+
+	return lookMatrix;
 }
 
 glm::mat4 Camera::getZoomMatrix() {
 	glm::mat4 zoomMatrix(1.0f);
-	zoomMatrix = glm::translate(zoomMatrix, glm::vec3(this->Zoom, this->Zoom, 1.0f));
+	//zoomMatrix = glm::translate(zoomMatrix, glm::vec3(this->Zoom, this->Zoom , 1.0f));
 	zoomMatrix = glm::scale(zoomMatrix, glm::vec3(this->Zoom, this->Zoom, 1.0f));
 	return zoomMatrix;
 }

@@ -58,11 +58,9 @@ static glm::vec2 getPlayerGridPos(glm::vec2 worlPos)
 	return glm::vec2(worlPos.x / tileSize, worlPos.y / tileSize);
 }
 
-
-
 void detectTileCol(Entity2D_Instaciaded& entity)
 {
-	glm::vec2 gridPos = tileMap->m_getGridPos(glm::vec2(entity.m_position.x,entity.m_position.y));
+	glm::vec2 gridPos = tileMap->m_getGridPos(glm::vec2(entity.m_getEntityRect().pos));
 
 	// check for every tile around the player for collision
 	for (int y = gridPos.y - 1; y < gridPos.y + 3; y++)
@@ -71,127 +69,113 @@ void detectTileCol(Entity2D_Instaciaded& entity)
 		{
 			Tile* tile = tileMap->m_GetGridTile(glm::vec2(x, y));
 
-			
+
 			if (tile && tile->m_isVisible())
 			{
-
+				// check collisions
 				if (rect_collision(entity.m_getEntityRect(), tile->m_getEntityRect()))
 				{
+					
+					// check if came from the bottom
+
 					Rect entityRect = entity.m_getEntityRect();
 					Rect tileRect = tile->m_getEntityRect();
-
-					//checking if the player is colliding down with a tile
-					if (entityRect.pos.y + entityRect.size.y <= tileRect.pos.y ||
-						entityRect.pos.y + entityRect.size.y < tileRect.pos.y + (tileRect.size.y / 2) &&
-						entityRect.pos.y + entityRect.size.y > tile->m_position.y)
+					if ((entity.m_getEntityRect().previusPos.y + entity.m_getEntityRect().size.y <= tile->m_getEntityRect().pos.y &&
+						entity.m_getEntityRect().pos.y + entity.m_getEntityRect().size.y > tile->m_getEntityRect().pos.y) ||
+						(entity.m_getEntityRect().previusPos.y + entity.m_getEntityRect().size.y < tile->m_getEntityRect().pos.y + (tile->m_getEntityRect().size.y / 2) &&
+							entity.m_getEntityRect().pos.y + entity.m_getEntityRect().size.y > tile->m_getEntityRect().pos.y))
 					{
-						entity.m_previusPos.y = tile->m_position.y - entity.m_getEntityRect().size.y - entity.m_getEntityRect().posOffset.y - 1;
-						entity.m_position.y = tile->m_position.y - entity.m_getEntityRect().size.y - entity.m_getEntityRect().posOffset.y;
+						entity.m_color = glm::vec4(0.5f, 1.0f, 1.0f, 1.0f);
+
 						entity.m_grounded = true;
-
+						entity.m_previusPos.y = tile->m_getEntityRect().pos.y - entity.m_getEntityRect().size.y - 
+							entity.m_getEntityRect().posOffset.y - 0.5f;
+						entity.m_position.y = tile->m_getEntityRect().pos.y - entity.m_getEntityRect().size.y -
+							entity.m_getEntityRect().posOffset.y;
 					}
-					//cheking if is colliding with a tile in the top
-					else if (entityRect.previusPos.y + entity.m_posOffsetRect.y >= 
-						tileRect.pos.y + tileRect.size.y &&
-						entityRect.pos.y < tile->m_position.y + tile->m_size.y)
+					//check if was on top
+					else if (
+						((entity.m_getEntityRect().previusPos.y + entity.m_posOffsetRect.y>=
+							tile->m_getEntityRect().pos.y + tile->m_getEntityRect().size.y &&
+							entity.m_getEntityRect().pos.y < tile->m_getEntityRect().pos.y + tile->m_getEntityRect().size.y) &&
+							entity.m_speed.y <= 0.0f))
 					{
-						entity.m_previusPos.y = tile->m_position.y + tile->m_size.y - entity.m_getEntityRect().posOffset.y + 1;
+						entity.m_top = true;
+						entity.m_previusPos.y = tile->m_position.y + tile->m_size.y - entity.m_getEntityRect().posOffset.y + 0.5f;
 						entity.m_position.y = tile->m_position.y + tile->m_size.y - entity.m_getEntityRect().posOffset.y;
-
 					}
-					//cheking if is colliding in the right with a tile
-					else if (entityRect.previusPos.x + entityRect.size.x<= tileRect.pos.x ||
-						entityRect.previusPos.x + entityRect.size.x < tileRect.pos.x + (tileRect.size.x / 2)
-						&& entityRect.pos.x + entityRect.size.x > tileRect.pos.x )
+					//check if was on left
+					else if (entity.m_getEntityRect().previusPos.x >= tile->m_getEntityRect().pos.x + tile->m_getEntityRect().size.x &&
+						entity.m_getEntityRect().pos.x < tile->m_getEntityRect().pos.x + tile->m_getEntityRect().size.x ||
+						entity.m_getEntityRect().previusPos.x > tile->m_getEntityRect().pos.x + (tile->m_getEntityRect().size.x / 2) &&
+						entity.m_getEntityRect().pos.x < tile->m_getEntityRect().pos.x + tile->m_getEntityRect().size.x)
 					{
-						entity.m_color = glm::vec4(0.5, 1.0, 0.7, 1.0f);
-						entity.m_previusPos.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x - 1;
-						entity.m_position.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x;
-						
-						entity.m_wallTouch = true;
-						entity.m_right = true;
-						entity.m_left = false;
-						
-					}
-					//cheking if its colliding in the left
-					else if (entityRect.previusPos.x + entity.m_posOffsetRect.x >= tileRect.pos.x + tileRect.size.x ||
-						entityRect.previusPos.x + entity.m_posOffsetRect.x > tileRect.pos.x + (tileRect.size.x / 2) &&
-						entityRect.pos.x + entity.m_posOffsetRect.x > tileRect.pos.x + tileRect.size.x)
-					{
-						
-						entity.m_color = glm::vec4(0.5, 1.0, 0.7, 1.0f);
-						entity.m_previusPos.x = tile->m_position.x + tile->m_size.x - entity.m_getEntityRect().posOffset.x  + 1;
-						entity.m_position.x = tile->m_position.x + tile->m_size.x - entity.m_getEntityRect().posOffset.x ;
-						entity.m_wallTouch = true;
+						entity.m_previusPos.x = tile->m_getEntityRect().pos.x + tile->m_getEntityRect().size.x - entity.m_getEntityRect().posOffset.x + 0.5f;
+						entity.m_position.x = tile->m_getEntityRect().pos.x + tile->m_getEntityRect().size.x - entity.m_getEntityRect().posOffset.x;
 						entity.m_left = true;
 						entity.m_right = false;
-						
+						entity.m_wallTouch = true;
+					}
+					//check if was on right
+					else if (entity.m_getEntityRect().previusPos.x + entity.m_getEntityRect().size.x <= tile->m_getEntityRect().pos.x &&
+						entity.m_getEntityRect().pos.x + entity.m_getEntityRect().size.x > tile->m_getEntityRect().pos.x ||
+						entity.m_getEntityRect().previusPos.x + entity.m_getEntityRect().size.x < tile->m_getEntityRect().pos.x + (tile->m_getEntityRect().size.x / 2) &&
+						entity.m_getEntityRect().pos.x + entity.m_getEntityRect().size.x > tile->m_getEntityRect().pos.x)
+					{
+						entity.m_previusPos.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x - 0.5f; 
+						entity.m_position.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x;
+						entity.m_right = true;
+						entity.m_left = false;
+						entity.m_wallTouch = true;
 					}
 					
-
-
 				}
-				//if is colliding with a tile but no pushing agains it then we set the walltouch to false
-				if (entity.m_wallTouch && !entity.m_pushed)
-				{
+				else
 					entity.m_color = glm::vec4(1.0f);
-					entity.m_wallTouch = false;
-					entity.m_left = false;
-					entity.m_right = false;
-				}
-				if (x == gridPos.x - 1 && y == gridPos.y && 
-					entity.m_position.x - 0.1 > tile->m_position.x + tile->m_size.x &&
-					entity.m_wallTouch && entity.m_pushed)
-				{
-					// if the player is not touching anymore the wall to his left, is set to false 
-					// the wall touch is set to false
-					entity.m_wallTouch = false;
-					entity.m_left = false;
-					entity.m_color = glm::vec4(1.0f);
-				}
-				// if the player is not touching the wall to his right
-				else if (x == gridPos.x + 2 && y == gridPos.y &&
-					entity.m_position.x + entity.m_size.x + 0.1 < tile->m_position.x &&
-					entity.m_wallTouch && entity.m_pushed)
-				{
-					entity.m_wallTouch = false;
-					entity.m_right = false;
-					entity.m_color = glm::vec4(1.0f);
-				}
-				// if the player is not touching the tile down of his pos
-				if (y == gridPos.y + 2 && x == gridPos.x && tile && tile->m_isVisible() &&
-					entity.m_getEntityRect().pos.y + entity.m_getEntityRect().size.y + 0.1 <
-					tile->m_position.y)
+				// if not collision, see if the entity is still grounded
+				if (y == gridPos.y + 2 && entity.m_getEntityRect().pos.y + entity.m_getEntityRect().size.y + 0.1 <
+					tile->m_getEntityRect().pos.y)
 				{
 					entity.m_grounded = false;
 				}
-
+				else if (y == gridPos.y - 1 && entity.m_getEntityRect().pos.y - 0.1f > tile->m_getEntityRect().pos.y + tile->m_getEntityRect().size.y)
+					entity.m_top = false;
+				
+				if (entity.m_wallTouch && !entity.m_pushed)
+				{
+					entity.m_wallTouch = false;
+					entity.m_left = false;
+					entity.m_right = false;
+				}
 
 			}
-			// if there is not a tile in the left and the player did not touch something in the right
-			if (((x == gridPos.x - 1 && y == gridPos.y) && (!tile || !tile->m_isVisible())) &&
-				!entity.m_right)
+			else if (y == gridPos.y - 1 && x == gridPos.x && tile && !tile->m_isVisible())
 			{
-				entity.m_wallTouch = false;
-				entity.m_left = false;
-				entity.m_color = glm::vec4(1.0f);
+				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(y, gridPos.x + 1));
 
+				if (anotherTile && !anotherTile->m_isVisible() || anotherTile == nullptr)
+					entity.m_top = false;
 			}
-			// if there is not a tile in the right and the player did not touch somethinf in the left
-			else if (((x == gridPos.x + 2 && y == gridPos.y) && (!tile || !tile->m_isVisible())) &&
-				!entity.m_left)
+			//see if the entity still have tiles down, if not, is not grounded anymore
+			else if (y == gridPos.y + 2 && x == gridPos.x && tile && !tile->m_isVisible() || tile == nullptr)
 			{
-				entity.m_wallTouch = false;
-				entity.m_right = false;
-				entity.m_color = glm::vec4(1.0f);
-			}
-			// if there is not a tile under the player
-			if (y == gridPos.y + 2 && x == gridPos.x && !tile)
-				entity.m_grounded = false;
-			// if there is a tile but is not visible
-			else if(y == gridPos.y + 2 && x == gridPos.x && tile && !tile->m_isVisible())
-				entity.m_grounded = false;
+				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(y, gridPos.x + 1));
 
+				if (anotherTile && !anotherTile->m_isVisible() || anotherTile == nullptr)
+					entity.m_grounded = false;
+			}
+			// if 
+			else if (y == gridPos.y && x == gridPos.x - 1 && (tile && !tile->m_isVisible() || tile == nullptr))
+			{
+				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(y, gridPos.x + 2));
+				if (anotherTile && !anotherTile->m_isVisible() || anotherTile == nullptr)
+				{
+					entity.m_left = false;
+					entity.m_right = false;
+					entity.m_wallTouch = false;
+				}
+
+			}
 		}
 	}
 }
@@ -228,7 +212,7 @@ void SandBox::initSandBox(int width, int height) {
 		heightProjection, 0.0f, -1.0f, 1.0f);
 	
 
-	camera.pos = glm::vec3(1.5f, 1.5f, 0.0f);
+	camera.pos = glm::vec3(-1.0f, -1.0f, 0.0f);
 
 	worldGrid = glm::vec2(widthProjection / tileSize, heightProjection / tileSize);
 	
@@ -249,6 +233,7 @@ void SandBox::initSandBox(int width, int height) {
 	shaderIntancing.use().setInt("texture0", 0);
 	shaderIntancing.use().setInt("texture1", 1);
 	
+	// shaderPlayer is not use because of a bug that makes cross gpu memory for the entities renderer with the player renderer
 	shaderPlayer = Shader("../shaders/player/player.vs",
 		"../shaders/player/player.frag");
 	shaderPlayer.use().setMat4("projection", projection);
@@ -278,11 +263,13 @@ void SandBox::initSandBox(int width, int height) {
 	// list of entities in the scene
 	entitiesInstanced.reserve(100);
 	
+	//load two different textures
 	Texture2D textCat;
-	textCat.load("../resources/textures/cat/Cat-Sprite-Sheet.png", true,0);
+	textCat.load("../resources/textures/cat/TextureAtlas.png", true,0);
 	Texture2D text2;
 	text2.load("../resources/textures/spaceCraft/spaceCraft.png", true,1);
 
+	//put the textures in a vector
 	textures.reserve(2);
 	textures.emplace_back(textCat);
 	textures.emplace_back(text2);
@@ -388,7 +375,7 @@ void SandBox::processInput(float dt) {
 			actualSpeed, actualRunAcceleration * mult * dt);
 		
 	}
-	if (this->keys[GLFW_KEY_A]) {
+	else if (this->keys[GLFW_KEY_A]) {
 		// this for the movement in the negative side of the x axis, and if mult is to change much faster 
 		// the vel to the positive to the negative side
 
@@ -400,7 +387,7 @@ void SandBox::processInput(float dt) {
 			mult = 100.0f;
 		// if the player is touching a wall it will change but not that quickly like the firts if statement
 		else if (player->m_wallTouch)
-			mult = 7.0f;
+			mult = 1.0f;
 		// if is on the air it will be much lower
 		else
 			mult = 2.0f;
@@ -465,7 +452,7 @@ void SandBox::processInput(float dt) {
 		this->keyProcessed[GLFW_KEY_SPACE] = true;
 		player->m_speed.y = -45;
 		player->m_speed.x = 0.0f;
-		player->m_speed.x = player->m_right ? -100 : 100;
+		player->m_speed.x = player->m_right ? -120 : 100;
 	}
 	if (!this->keys[GLFW_KEY_W]  && !this->keys[GLFW_KEY_S] && !this->m_gravityInfluence)
 	{
@@ -489,8 +476,10 @@ void SandBox::processInput(float dt) {
 	}
 	// if the player is grounded therer is not gravity affecting him
 	else if (this->m_gravityInfluence && player->m_grounded)
+	{
 		player->m_speed.y = 0.0f;
-
+	}
+	
 	
 	player->move(dt);
 	detectTileCol(*player);
@@ -568,17 +557,8 @@ void SandBox::update(float& dt) {
 
 	// this is to animate the player changing his texCoords, i will extend this to make it better 
 	// in the entity2D_instanced class
-	if (player->m_texCoords.position.x >= 96.0f)
-		player->m_texCoords.position.x = 0.0f;
-	else if (animTime > 0.5f) {
-		animTime = 0.0f;
-		player->setNewTexOffset(glm::vec2(32.0f, 0.0f));
-		spriteRendererInstanced->updateEntity(*player);
-	}
-	else {
-		animTime += 6.0f * dt;
-	}
-	
+	player->m_anim(dt);
+	spriteRendererInstanced->updateEntity(*player);
 	
 }
 
