@@ -1,5 +1,8 @@
 #version 420 core
 
+/* this and the frag shader are for the player but because a bug that make the renderer of the other entities cross data with
+the player renderer is not in use, and I use instead the rendererIntancing shaders*/
+
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aTexCoords;
 layout (location = 2) in float aTexSlot;

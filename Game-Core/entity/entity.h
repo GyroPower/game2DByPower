@@ -118,6 +118,7 @@ public:
 	bool m_right;
 	bool m_left;
 	bool m_top;
+	bool m_col;
 
 	Entity2D_Instaciaded(int* renderIndex = nullptr, glm::vec3 position = glm::vec3(0.0f), glm::vec2 size = glm::vec2(10.0f),
 		glm::vec4 color = glm::vec4(1.0f), glm::vec2 posOffsetRect = glm::vec2(0.0f), glm::vec2 sizeOffsetRect = glm::vec2(0.0f), float texSlot = -1.0f, glm::vec2 texPos = glm::vec2(0.0f),

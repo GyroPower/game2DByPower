@@ -50,7 +50,7 @@ Tile* TileMap::m_GetGridTile(glm::vec2 gridPos)
 
 	if (gridPos.x >= 0 && gridPos.x <= (int)this->m_mapSize.x && gridPos.y >= 0 && gridPos.y < (int)this->m_mapSize.y)
 	{
-		tile = &this->m_levelTileMap[gridPos.y][gridPos.x];
+		tile = &this->m_levelTileMap[(int)gridPos.y][(int)gridPos.x];
 	}
 
 	return tile;
@@ -58,8 +58,8 @@ Tile* TileMap::m_GetGridTile(glm::vec2 gridPos)
 
 glm::vec2 TileMap::m_getGridPos(glm::vec2 worldPos)
 {
-	int x = worldPos.x / this->m_tileSize;
-	int y = worldPos.y / this->m_tileSize;
+	float x = worldPos.x / this->m_tileSize;
+	float y = worldPos.y / this->m_tileSize;
 
 	return glm::vec2(x, y);
 }

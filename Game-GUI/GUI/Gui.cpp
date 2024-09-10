@@ -109,7 +109,7 @@ void GUI::showBoolVar(std::string valName, bool& val, bool* open)
 {
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
 
-	if (ImGui::Begin(valName.c_str(), NULL, flags))
+	if (ImGui::Begin(valName.c_str(), open, flags))
 	{
 		ImGui::Text(valName.c_str());
 		ImGui::SameLine(0, 0);
@@ -134,6 +134,8 @@ void GUI::m_DebugPlayer(Player& player)
 	static bool showHitbox = false;
 	static bool showLeftTouch = false;
 	static bool showRightTouch = false;
+	static bool showTopTouch = false;
+	static bool showPlayerSpeed = false;
 
 	ImGui::Begin("Player debug", NULL, flags);
 
@@ -145,6 +147,8 @@ void GUI::m_DebugPlayer(Player& player)
 	ImGui::Checkbox("show Player Hitbox", &showHitbox);
 	ImGui::Checkbox("Show Player left touch", &showLeftTouch);
 	ImGui::Checkbox("Show Player right touch", &showRightTouch);
+	ImGui::Checkbox("Show Player top touch", &showTopTouch);
+	ImGui::Checkbox("Show player speed", &showPlayerSpeed);
 
 	if (player.m_returnVisibilityHitbox() != showHitbox)
 		player.m_setVisibilityHitbox(showHitbox);
@@ -158,6 +162,8 @@ void GUI::m_DebugPlayer(Player& player)
 	if (showPlayerGrounded) this->showBoolVar("Player is grounded", player.m_grounded, &showPlayerGrounded);
 	if (showLeftTouch) this->showBoolVar("Player left touch", player.m_left, &showLeftTouch);
 	if (showRightTouch) this->showBoolVar("Player right touch", player.m_right, &showRightTouch);
+	if (showTopTouch) this->showBoolVar("Player top touch", player.m_top, &showTopTouch);
+	if (showPlayerSpeed) this->showVec("Player collision", player.m_speed, &showPlayerSpeed);
 
 	ImGui::End();
 

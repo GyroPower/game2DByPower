@@ -4,7 +4,8 @@
 Player::Player(int* renderIndex, glm::vec3 position, glm::vec2 size,
 	glm::vec4 color, glm::vec2 posOffsetRect, glm::vec2 sizeOffsetRect, float texSlot, glm::vec2 texPos,
 	glm::vec2 texSize)
-	:Entity2D_Instaciaded(renderIndex,position,size,color,posOffsetRect,sizeOffsetRect,texSlot,texPos,texSize),m_showPlayerHitboxQuad(false)
+	:Entity2D_Instaciaded(renderIndex, position, size, color, posOffsetRect, sizeOffsetRect, texSlot,
+		texPos, texSize), m_showPlayerHitboxQuad(false)
 {
 	
 }
@@ -55,10 +56,7 @@ Rect Player::m_getEntityRect()
 
 void Player::move(float& dt)
 {
-	this->m_previusPos = this->m_position;
-	this->m_position += this->m_speed;
-	this->setPosInterpolation(dt);
-
+	
 
 	if (this->m_pushed && this->m_grounded)
 	{
@@ -77,11 +75,15 @@ void Player::move(float& dt)
 
 	if (this->m_speed.y > 0.0f && !this->m_grounded)
 		this->state = FALL;
-	else if (this->m_speed.y < 0.0f && !this->m_grounded)
+	if (this->m_speed.y <= 0.0f && !this->m_grounded)
 		this->state = JUMP;
 	
 	if (this->m_wallTouch && !this->m_grounded)
 		this->state = WALL_TOUCH;
+
+	this->m_previusPos = this->m_position;
+	this->m_position += this->m_speed;
+	this->setPosInterpolation(dt);
 
 }
 
@@ -126,7 +128,8 @@ void Player::m_anim(float& dt)
 	}
 	else if (this->state == JUMP)
 	{
-		if (this->m_texCoords.position.y < 48.0f)
+		
+		if (this->m_texCoords.position.y < 48.0f || this->m_texCoords.position.y > 48.0f || this->m_texCoords.position.y == 48.0f && m_texCoords.position.x > 0.0f )
 		{
 			this->m_texCoords.position.y = 48.0f;
 			this->m_texCoords.position.x = 0.0f;
@@ -134,8 +137,8 @@ void Player::m_anim(float& dt)
 	}
 	else if (this->state == FALL)
 	{
-		if (this->m_texCoords.position.y < 48.0f || this->m_texCoords.position.x < 32.0f ||
-			this->m_texCoords.position.x > 32.0f)
+		if (this->m_texCoords.position.y < 48.0f || this->m_texCoords.position.y > 48.0f || this->m_texCoords.position.y == 48.0f &&
+			this->m_texCoords.position.x > 32.0f || this->m_texCoords.position.x < 32.0f)
 		{
 			this->m_texCoords.position.y = 48.0f;
 			this->m_texCoords.position.x = 32.0f;

@@ -42,7 +42,11 @@ static glm::vec2 worldGrid(0.0f, 0.0f);
 static glm::vec3 globalOrigin(0.0f);
 static std::vector<Texture2D> playerTex;
 static std::vector<Texture2D> tilesTex;
+static std::vector<Tile> tilesChangeColor;
+static std::vector<Tile> tilesReturnColor;
 
+static int initialSizeChange = 0;
+static int initialSizeReturn = 0;
 
 static int instanceTileRender_index = 0;
 static int instanceEntity_index = 0;
@@ -58,9 +62,18 @@ static glm::vec2 getPlayerGridPos(glm::vec2 worlPos)
 	return glm::vec2(worlPos.x / tileSize, worlPos.y / tileSize);
 }
 
+
 void detectTileCol(Entity2D_Instaciaded& entity)
 {
 	glm::vec2 gridPos = tileMap->m_getGridPos(glm::vec2(entity.m_getEntityRect().pos));
+
+	if (gridPos.y < 0.0f)
+		gridPos.y = (int)gridPos.y - 1;
+	if (gridPos.x < 0.0f)
+		gridPos.x = (int)gridPos.x - 1;
+	
+	gridPos.y = (int)gridPos.y;
+	gridPos.x = (int)gridPos.x;
 
 	// check for every tile around the player for collision
 	for (int y = gridPos.y - 1; y < gridPos.y + 3; y++)
@@ -72,10 +85,12 @@ void detectTileCol(Entity2D_Instaciaded& entity)
 
 			if (tile && tile->m_isVisible())
 			{
+				
 				// check collisions
 				if (rect_collision(entity.m_getEntityRect(), tile->m_getEntityRect()))
 				{
-					
+					entity.m_col = true;
+
 					// check if came from the bottom
 
 					Rect entityRect = entity.m_getEntityRect();
@@ -88,14 +103,14 @@ void detectTileCol(Entity2D_Instaciaded& entity)
 						entity.m_color = glm::vec4(0.5f, 1.0f, 1.0f, 1.0f);
 
 						entity.m_grounded = true;
-						entity.m_previusPos.y = tile->m_getEntityRect().pos.y - entity.m_getEntityRect().size.y - 
+						entity.m_previusPos.y = tile->m_getEntityRect().pos.y - entity.m_getEntityRect().size.y -
 							entity.m_getEntityRect().posOffset.y - 0.5f;
 						entity.m_position.y = tile->m_getEntityRect().pos.y - entity.m_getEntityRect().size.y -
 							entity.m_getEntityRect().posOffset.y;
 					}
 					//check if was on top
 					else if (
-						((entity.m_getEntityRect().previusPos.y + entity.m_posOffsetRect.y>=
+						((entity.m_getEntityRect().previusPos.y >=
 							tile->m_getEntityRect().pos.y + tile->m_getEntityRect().size.y &&
 							entity.m_getEntityRect().pos.y < tile->m_getEntityRect().pos.y + tile->m_getEntityRect().size.y) &&
 							entity.m_speed.y <= 0.0f))
@@ -114,6 +129,7 @@ void detectTileCol(Entity2D_Instaciaded& entity)
 						entity.m_position.x = tile->m_getEntityRect().pos.x + tile->m_getEntityRect().size.x - entity.m_getEntityRect().posOffset.x;
 						entity.m_left = true;
 						entity.m_right = false;
+						entity.m_color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 						entity.m_wallTouch = true;
 					}
 					//check if was on right
@@ -122,21 +138,23 @@ void detectTileCol(Entity2D_Instaciaded& entity)
 						entity.m_getEntityRect().previusPos.x + entity.m_getEntityRect().size.x < tile->m_getEntityRect().pos.x + (tile->m_getEntityRect().size.x / 2) &&
 						entity.m_getEntityRect().pos.x + entity.m_getEntityRect().size.x > tile->m_getEntityRect().pos.x)
 					{
-						entity.m_previusPos.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x - 0.5f; 
+						entity.m_previusPos.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x - 0.5f;
 						entity.m_position.x = tile->m_position.x - entity.m_getEntityRect().posOffset.x - entity.m_getEntityRect().size.x;
 						entity.m_right = true;
 						entity.m_left = false;
+						entity.m_color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 						entity.m_wallTouch = true;
 					}
-					
+
 				}
 				else
-					entity.m_color = glm::vec4(1.0f);
+					entity.m_col = false;
 				// if not collision, see if the entity is still grounded
-				if (y == gridPos.y + 2 && entity.m_getEntityRect().pos.y + entity.m_getEntityRect().size.y + 0.1 <
+				if (y == gridPos.y + 2 && (x == gridPos.x || x == gridPos.x + 1) && entity.m_getEntityRect().pos.y + entity.m_getEntityRect().size.y + 0.1 <
 					tile->m_getEntityRect().pos.y)
 				{
 					entity.m_grounded = false;
+					entity.m_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 				else if (y == gridPos.y - 1 && entity.m_getEntityRect().pos.y - 0.1f > tile->m_getEntityRect().pos.y + tile->m_getEntityRect().size.y)
 					entity.m_top = false;
@@ -146,33 +164,38 @@ void detectTileCol(Entity2D_Instaciaded& entity)
 					entity.m_wallTouch = false;
 					entity.m_left = false;
 					entity.m_right = false;
+					entity.m_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 
 			}
-			else if (y == gridPos.y - 1 && x == gridPos.x && tile && !tile->m_isVisible())
+			else if (y == gridPos.y - 1 && x == gridPos.x && (tile && !tile->m_isVisible()))
 			{
-				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(y, gridPos.x + 1));
+				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(gridPos.x + 1,y));
 
 				if (anotherTile && !anotherTile->m_isVisible() || anotherTile == nullptr)
 					entity.m_top = false;
 			}
 			//see if the entity still have tiles down, if not, is not grounded anymore
-			else if (y == gridPos.y + 2 && x == gridPos.x && tile && !tile->m_isVisible() || tile == nullptr)
+			else if (y == gridPos.y + 2 && x == gridPos.x && ((tile && !tile->m_isVisible()) || tile == nullptr))
 			{
-				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(y, gridPos.x + 1));
+				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(gridPos.x + 1, gridPos.y + 2));
 
-				if (anotherTile && !anotherTile->m_isVisible() || anotherTile == nullptr)
+				if ((anotherTile && !anotherTile->m_isVisible()) || anotherTile == nullptr)
+				{
 					entity.m_grounded = false;
+					entity.m_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				}
 			}
-			// if 
-			else if (y == gridPos.y && x == gridPos.x - 1 && (tile && !tile->m_isVisible() || tile == nullptr))
+			// if theres is not a wall in both sides of the player
+			else if ((y == gridPos.y) && x == gridPos.x - 1 && ((tile && !tile->m_isVisible()) || tile == nullptr))
 			{
-				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(y, gridPos.x + 2));
-				if (anotherTile && !anotherTile->m_isVisible() || anotherTile == nullptr)
+				Tile* anotherTile = tileMap->m_GetGridTile(glm::vec2(gridPos.x + 2,y));
+				if ((anotherTile && !anotherTile->m_isVisible()) || anotherTile == nullptr)
 				{
 					entity.m_left = false;
 					entity.m_right = false;
 					entity.m_wallTouch = false;
+					entity.m_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 				}
 
 			}
@@ -259,6 +282,8 @@ void SandBox::initSandBox(int width, int height) {
 
 
 	
+	tilesChangeColor.reserve(2);
+	tilesReturnColor.reserve(2);
 
 	// list of entities in the scene
 	entitiesInstanced.reserve(100);
@@ -358,7 +383,7 @@ void SandBox::processInput(float dt) {
 		if (player->m_speed.x < 0.0f && player->m_grounded || player->m_speed.x < 0.0f && !this->m_gravityInfluence)
 			mult = 100.0f;
 		else if (player->m_wallTouch)
-			mult = 7.0f;
+			mult = 3.0f;
 		else
 			mult = 2.0f;
 
@@ -438,7 +463,7 @@ void SandBox::processInput(float dt) {
 		player->m_speed.y = byPowerMath::approach(player->m_speed.y, player->m_maxSpeed /2 + player->m_maxSpeed / 4, runAcceleration * mult * dt);
 	
 	}
-	if (this->keys[GLFW_KEY_SPACE] && !this->keyProcessed[GLFW_KEY_SPACE] && this->m_gravityInfluence&& player->m_grounded)
+	if (this->keys[GLFW_KEY_SPACE] && !this->keyProcessed[GLFW_KEY_SPACE] && this->m_gravityInfluence && player->m_grounded)
 	{
 		// jump if is grounded 
 		this->keyProcessed[GLFW_KEY_SPACE] = true;
@@ -481,8 +506,11 @@ void SandBox::processInput(float dt) {
 	}
 	
 	
+	
 	player->move(dt);
 	detectTileCol(*player);
+
+	
 	
 	spriteRendererInstanced->updateEntity(*player);
 	
@@ -559,6 +587,7 @@ void SandBox::update(float& dt) {
 	// in the entity2D_instanced class
 	player->m_anim(dt);
 	spriteRendererInstanced->updateEntity(*player);
+
 	
 }
 
@@ -568,15 +597,27 @@ void SandBox::updateEntities(float& dt) {
 	float vel = dt * velocity / 1.5;
 	
 	
+
+	
+		
+	
 }
 
 void SandBox::renderGUI() {
 
 	//This is where all the gui elements are called to created and render
-	
+	glm::vec2 gridPos = tileMap->m_getGridPos(glm::vec2(player->m_getEntityRect().pos));
+
+	if (gridPos.y < 0.0f)
+		gridPos.y = (int)gridPos.y - 1;
+	if (gridPos.x < 0.0f)
+		gridPos.x = (int)gridPos.x - 1;
 	//gui.useSliderForVec2("Vec for change y and x texCoords", entities[0].maxTexCoords);
 	gui.showVec("camera", camera.pos,NULL);
+	gui.showVec("Player gridPos", glm::vec3((int)gridPos.x,(int)gridPos.y, 0.0f));
+	
 	gui.m_DebugPlayer(*player);
+
 
 	gui.showVec("globalMousePos", glm::vec3(this->m_mousePosGlobal,0.0f));
 	gui.enableTileMapEditing(this->m_enableTileMapEditing, this->m_showGridMap);
