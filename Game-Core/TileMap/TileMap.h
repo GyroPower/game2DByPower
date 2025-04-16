@@ -8,7 +8,7 @@
 class TileMap {
 private:
 	std::vector<std::vector<Tile>> m_levelTileMap;
-	std::vector<Entity2D_Instaciaded> m_tilesToRender;
+	std::vector<Entity2D_Instaciaded*> m_tilesToRender;
 
 	glm::vec2 m_mapSize;
 	int m_tileSize;
@@ -23,6 +23,7 @@ public:
 	Tile* m_GetTile(glm::vec3 worldPos);
 	Tile* m_GetGridTile(glm::vec2 gridPos);
 	glm::vec2 m_getGridPos(glm::vec2 worldPos);
+	int m_getTileSize();
 
 	float getWidth();
 	float getHeight();
@@ -33,5 +34,5 @@ public:
 	void m_updateTilesBufferRenderer(SpriteRendererInstanced& tileRenderer);
 	void m_deleteTileFromRender(glm::vec3 worldPos);
 	void m_updateTileRenderBuffer(SpriteRendererInstanced& tileRenderer);
-	
+	void m_updateTileMap(glm::vec2 size, int tileSize);
 };

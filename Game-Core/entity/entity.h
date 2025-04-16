@@ -1,8 +1,15 @@
 #pragma once
 #include<glm/glm.hpp>
 #include<vector>
+#include<string>
 #include"Texture/texture.h"
 
+/*	Simple vertex Structure to pass render data of a vertex
+	This is not use to much in my interface of instance rendering but I leave it because maybe it 
+	will help me in the future and to see the first implemetation of batch rendering in the SpriteRenderer
+	class that for now it's not updated to handle the polymorfism for classes that would inheret from 
+	Entity2D
+*/
 struct Vertex {
 	glm::vec3 position;
 	glm::vec2 texCoords;
@@ -69,7 +76,12 @@ enum EntityState {
 	FALL,
 	WALL_TOUCH,
 };
-
+/*
+	this class is for use of batch rendering but I desisted of doing in that way just to understand how
+	to use instance rendering in OpenGL but i will probably write a system of rendering and improve how
+	to handle the data for a Entity2D just to stablish parameters and make it running without complications
+	
+*/
 class Entity2D {
 
 public:
@@ -90,6 +102,21 @@ public:
 };
 
 
+/*
+	Entity2D_Instaciaded is the base class for entities used in the sandBox class,
+	the Player and EnemySlime class are in the same project for simplicity, but probably the better way
+	to structure the project would be to put your own code in the main app directories to compile.
+	
+	animTimeLimit is how much time have to pass to change the frame in the texture of the entity
+	if the time pass we will change the coords, i will make a better interface to make it more easy
+	but for now i leave it this way.
+
+	there are two classes that inheret from this one and use that kind of system but coded manually:
+	Player and EnemySlime (in the Enemy.h and Enemy.cpp respectly for the EnemySlime).
+
+	I would like to set a better interface to make it more flexible and easy to use and costumize but
+	for now I leave it like this.
+*/
 
 class Entity2D_Instaciaded {
 
@@ -111,14 +138,25 @@ public:
 	int m_entityIndex;
 	int m_renderInstanceIndex;
 	EntityState state;
+	std::string m_tagName;
 	
+	/*
+		grounded is use for detection of the "ground" and m_bottom should be use for collision detection
+		on the bottom, but if you want, can use as you wish
+	*/
+	bool m_updateTimers;
 	bool m_grounded;
 	bool m_wallTouch;
 	bool m_pushed;
 	bool m_right;
 	bool m_left;
 	bool m_top;
+	bool m_bottom;
 	bool m_col;
+	bool m_moveRoutine;
+	bool m_gravityInfluence;
+	bool m_delete;
+	bool m_toDelete;
 
 	Entity2D_Instaciaded(int* renderIndex = nullptr, glm::vec3 position = glm::vec3(0.0f), glm::vec2 size = glm::vec2(10.0f),
 		glm::vec4 color = glm::vec4(1.0f), glm::vec2 posOffsetRect = glm::vec2(0.0f), glm::vec2 sizeOffsetRect = glm::vec2(0.0f), float texSlot = -1.0f, glm::vec2 texPos = glm::vec2(0.0f),
@@ -129,10 +167,14 @@ public:
 	void setNewTexOffset(glm::vec2 newOffset);
 	int m_returnRenderIndex();
 	void setPosInterpolation(float& dt);
-
+	
+	virtual void m_onCollision();
 	virtual void move(float& dt);
 	virtual void m_anim(float& dt);
 	virtual Rect m_getEntityRect();
+	virtual std::string m_getTagName();
+	virtual void m_updateTimer(float& dt);
+	
 };
 
 class Tile : public Entity2D_Instaciaded {

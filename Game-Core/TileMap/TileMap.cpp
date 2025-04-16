@@ -25,7 +25,25 @@ TileMap::TileMap(glm::vec2 mapSize, int tileSize)
 
 }
 
-TileMap::~TileMap(){ }
+void TileMap::m_updateTileMap(glm::vec2 size, int tileSize)
+{
+	this->m_mapSize = size;
+	
+
+	for (int y = 0; y < (int)m_mapSize.y; y++)
+	{
+		for (int x = 0; x <= (int)m_mapSize.x; x++)
+		{
+			Tile* tile = &this->m_levelTileMap[y][x];
+			tile->m_position = glm::vec3(x * this->m_tileSize, y * this->m_tileSize, 0.0f);
+			tile->m_size = glm::vec2(size);
+		}
+	}
+
+	
+}
+
+TileMap::~TileMap() { this->m_tilesToRender.clear(); }
 
 Tile* TileMap::m_GetTile(glm::vec3 worldPos)
 {
@@ -64,6 +82,11 @@ glm::vec2 TileMap::m_getGridPos(glm::vec2 worldPos)
 	return glm::vec2(x, y);
 }
 
+int TileMap::m_getTileSize()
+{
+	return this->m_tileSize;
+}
+
 void TileMap::m_addTileToRender(glm::vec3 wordlPos)
 {
 	Tile* tile = this->m_GetTile(wordlPos);
@@ -71,7 +94,7 @@ void TileMap::m_addTileToRender(glm::vec3 wordlPos)
 	if (tile && !tile->m_isVisible())
 	{
 		tile->m_setVisible(true, this->m_tileRenderIndex);
-		this->m_tilesToRender.emplace_back(*tile);
+		this->m_tilesToRender.emplace_back(tile);
 
 
 		this->m_tileRenderIndex++;
@@ -90,7 +113,7 @@ void TileMap::m_deleteTileFromRender(glm::vec3 worldPos)
 	{
 		
 		int tileIndex = tile->m_returnRenderIndex();
-		int lastIndex = m_tilesToRender[m_tilesToRender.size() - 1].m_returnRenderIndex();
+		int lastIndex = m_tilesToRender[m_tilesToRender.size() - 1]->m_returnRenderIndex();
 		tile->m_setVisible(false, this->m_tileRenderIndex);
 		
 		
@@ -103,10 +126,10 @@ void TileMap::m_deleteTileFromRender(glm::vec3 worldPos)
 		{
 			for (int i = tileIndex; i < lastIndex; i++)
 			{
-				glm::vec3 tilePos = this->m_tilesToRender[i].m_position;
+				glm::vec3 tilePos = this->m_tilesToRender[i]->m_position;
 				Tile* tileToChange = this->m_GetTile(tilePos);
 				tileToChange->m_setRenderIndex(i);
-				this->m_tilesToRender[i] = *(tileToChange);
+				this->m_tilesToRender[i] = tileToChange;
 			}
 		}
 
@@ -140,20 +163,21 @@ void TileMap::m_removeTile(glm::vec3 worldPos)
 
 void TileMap::m_updateTilesBufferRenderer(SpriteRendererInstanced& tileRenderer)
 {
-	std::vector<Entity2D_Instaciaded> tiles;
+	std::vector<Entity2D_Instaciaded*> tiles;
 	tiles.reserve(this->m_levelTileMap.size() * this->m_levelTileMap[0].size());
 	for (int y = 0; y < this->m_levelTileMap.size(); y++)
 	{
 		for (int x = 0; x < this->m_levelTileMap[y].size(); x++)
 		{
 			if (this->m_levelTileMap[y][x].m_isVisible())
-				tiles.emplace_back(this->m_levelTileMap[y][x]);
+				tiles.emplace_back(&this->m_levelTileMap[y][x]);
 		}
 	}
 	if (tiles.size() > 0)
 		tileRenderer.initFillData(tiles);
 	else
 		tileRenderer.emptyAllData();
+	tiles.clear();
 }
 
 void TileMap::m_updateTileRenderBuffer(SpriteRendererInstanced& tileRenderer)

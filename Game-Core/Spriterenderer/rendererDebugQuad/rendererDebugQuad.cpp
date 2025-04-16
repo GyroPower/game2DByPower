@@ -80,7 +80,7 @@ void rendererDebugQuad::reserveData(int sizeToReserve) {
 
 }
 
-void rendererDebugQuad::initData(std::vector<Entity2D_Instaciaded>& entities) {
+void rendererDebugQuad::initData(std::vector<Entity2D_Instaciaded*>& entities) {
 
 	std::vector<glm::mat4> modelMat4;
 	modelMat4.reserve(entities.size());
@@ -89,21 +89,25 @@ void rendererDebugQuad::initData(std::vector<Entity2D_Instaciaded>& entities) {
 	colors.reserve(entities.size());
 	for (int i = 0; i < entities.size(); i++) {
 		glm::mat4 model = glm::mat4(1.0f);
-		Rect entityRect = entities[i].m_getEntityRect();
+		Rect entityRect = entities[i]->m_getEntityRect();
 		model = glm::translate(model, glm::vec3(entityRect.pos,0.0f));
 		model = glm::scale(model, glm::vec3(entityRect.size, 1.0f));
 		modelMat4.emplace_back(model);
-		colors.emplace_back(entities[i].m_color);
+		colors.emplace_back(entities[i]->m_color);
 	}
 
 	int offsetColor = this->m_instances > 0 ? sizeof(glm::vec4) : 0;
 	int offsetPos = this->m_instances > 0 ? sizeof(glm::mat4) : 0;
 
-	glBindVertexArray(this->m_VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_color);
-	glBufferSubData(GL_ARRAY_BUFFER, offsetColor, (sizeof(glm::vec4) * entities.size()), &colors[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_pos);
-	glBufferSubData(GL_ARRAY_BUFFER, offsetPos, (sizeof(glm::mat4) * entities.size()), &modelMat4[0]);
+	// Check if there are entities to fill the buffer for the renderer
+	if (entities.size() > 0)
+	{
+		glBindVertexArray(this->m_VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_color);
+		glBufferSubData(GL_ARRAY_BUFFER, offsetColor, (sizeof(glm::vec4) * entities.size()), &colors[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, this->m_VBO_pos);
+		glBufferSubData(GL_ARRAY_BUFFER, offsetPos, (sizeof(glm::mat4) * entities.size()), &modelMat4[0]);
+	}
 
 	this->m_instances = this->m_instances == 0 ? entities.size() : this->m_instances + entities.size();
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

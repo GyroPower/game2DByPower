@@ -1,5 +1,5 @@
 project "shaders"
-    kind "SharedLib"
+    kind "None"
     files {"./*"}
 
     removefiles {"**.vcxproj", "**.vcxproj.filters"}

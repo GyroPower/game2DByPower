@@ -60,10 +60,11 @@ Entity2D_Instaciaded::Entity2D_Instaciaded(int* renderIndex, glm::vec3 position,
 	glm::vec4 color, glm::vec2 posOffsetRect, glm::vec2 sizeOffsetRect, float texSlot, glm::vec2 texPos,
 	glm::vec2 texSize)
 	: m_color(color), m_position(position), m_size(size), texSlot(texSlot), m_entityIndex(entityIndex),
-	m_texCoords(texPos, texSize),m_texOffset(glm::vec2(0.0f)), m_maxSpeed(120.0f),m_previusPos(position),
-	m_grounded(false), m_speed(0.0f),m_wallTouch(false), m_pushed(false),m_right(false), m_left(false),state(IDLE), 
-	m_posOffsetRect(posOffsetRect), m_sizeOffsetRect(sizeOffsetRect),m_animTimeLimit(0.5f),m_animTime(0.0f), m_top(false),
-	m_col(false)
+	m_texCoords(texPos, texSize), m_texOffset(glm::vec2(0.0f)), m_maxSpeed(120.0f), m_previusPos(position),
+	m_grounded(false), m_speed(0.0f), m_wallTouch(false), m_pushed(false), m_right(false), m_left(false), state(IDLE),
+	m_posOffsetRect(posOffsetRect), m_sizeOffsetRect(sizeOffsetRect), m_animTimeLimit(0.5f), m_animTime(0.0f), m_top(false),
+	m_col(false), m_tagName(""), m_bottom(false), m_updateTimers(false), m_moveRoutine(false), m_delete(false),
+	m_toDelete(false)
 {
 	this->m_direction = glm::vec3(0.0f);
 
@@ -98,13 +99,9 @@ int Entity2D_Instaciaded::m_returnRenderIndex()
 
 void Entity2D_Instaciaded::move(float& dt)
 {
+	/* Basic way of how should you entity move, can change if you want in a children class */
 	this->m_previusPos = this->m_position;
-	
-	
 	this->m_position += this->m_speed;
-
-	
-	//if (useInterpolation)
 	this->setPosInterpolation(dt);
 }
 
@@ -115,12 +112,38 @@ void Entity2D_Instaciaded::setPosInterpolation(float& dt)
 
 Rect Entity2D_Instaciaded::m_getEntityRect()
 {
+	/* 
+		Basic way of how should you entity return the rect for collision detection,
+		can change if you want in a children class 
+	*/
 	return Rect(this->m_position,this->m_size,this->m_previusPos);
 }
 
+std::string Entity2D_Instaciaded::m_getTagName()
+{
+	return m_tagName;
+}
+
+void Entity2D_Instaciaded::m_onCollision()
+{
+	/*
+		set the logic of how should react on collision on your children class
+	*/
+}
+
+
 void Entity2D_Instaciaded::m_anim(float& dt)
 {
+	/*
+		set the logic of how should animate and update the texCoords on your children class
+	*/
+}
 
+void Entity2D_Instaciaded::m_updateTimer(float& dt)
+{
+	/*
+		set the logic for timers in the child classes
+	*/
 }
 
 ////////////////////////////////////

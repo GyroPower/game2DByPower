@@ -31,6 +31,7 @@ void Texture2D::load(const char* path, bool alpha,int slot) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->filterMax);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		stbi_image_free(data);
+		std::cout<<"Texture loaded\n";
 
 	}
 	else {

@@ -16,7 +16,6 @@ out vec2 TexCoords;
 
 uniform mat4 projection;
 uniform mat4 view;
-uniform mat4 modelZoomCamera;
 
 void main()
 {
@@ -35,7 +34,7 @@ void main()
 		vec2(left,bottom)
 	};
 
-	gl_Position = projection * view * modelZoomCamera * instanceMatrix * vec4(aPos.x,aPos.y,aPos.z,1.0f);
+	gl_Position = projection * view * instanceMatrix * vec4(aPos.x,aPos.y,aPos.z,1.0f);
 	TexCoords = textureCoords[gl_VertexID];
 	color = aColor;
 	texSlot = aTexSlot;

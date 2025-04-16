@@ -8,6 +8,7 @@ SpriteRenderer::SpriteRenderer(Shader& shader) {
 	this->shader = shader;
 	glGenVertexArrays(1, &this->VAO);
 	glGenBuffers(1, &this->VBO);
+	
 	glGenBuffers(1, &this->IBO);
 
 }
@@ -185,7 +186,7 @@ void SpriteRendererInstanced::reserveBuffer(int sizeToReserve) {
 }
 
 // filling data to the renderer buffer
-void SpriteRendererInstanced::initFillData(std::vector<Entity2D_Instaciaded>& entities) {
+void SpriteRendererInstanced::initFillData(std::vector<Entity2D_Instaciaded*>& entities) {
 
 	std::vector<glm::mat4> modelMat4;
 	modelMat4.reserve(entities.size());
@@ -201,14 +202,22 @@ void SpriteRendererInstanced::initFillData(std::vector<Entity2D_Instaciaded>& en
 
 	for (int i = 0; i < entities.size(); i++) {
 		
-		Entity2D_Instaciaded& entity = entities[i];
+		Entity2D_Instaciaded& entity = *(entities[i]);
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, entities[i].m_position);
-		model = glm::scale(model, glm::vec3(entities[i].m_size, 1.0f));
+
+		model = glm::translate(model, entity.m_position);
+		if (entity.m_direction.x == -1.0f)
+		{
+			model = glm::translate(model, glm::vec3(0.5 * entity.m_size.x, 0.5 * entity.m_size.y, 0.0f));
+			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			model = glm::translate(model, glm::vec3(-0.5 * entity.m_size.x, -0.5 * entity.m_size.y, 0.0f));
+
+		}
+		model = glm::scale(model, glm::vec3(entity.m_size, 1.0f));
 		modelMat4.emplace_back(model);
-		texSlots.emplace_back(entities[i].texSlot);
-		colors.emplace_back(entities[i].m_color);
-		texCoords.emplace_back(entities[i].m_texCoords);
+		texSlots.emplace_back(entity.texSlot);
+		colors.emplace_back(entity.m_color);
+		texCoords.emplace_back(entity.m_texCoords);
 
 		
 		
@@ -223,23 +232,31 @@ void SpriteRendererInstanced::initFillData(std::vector<Entity2D_Instaciaded>& en
 	int offsetPos = this->instances == 1 ? sizeof(glm::mat4) : 0;
 	int offsetTexCoords = this->instances == 1 ? sizeof(TexCoords) : 0;
 
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Color);
-	glBufferSubData(GL_ARRAY_BUFFER, offsetColor, (sizeof(glm::vec4) * entities.size()), &colors[0]);
+	// Check if there are entities to fill the buffer for the renderer
+	if (entities.size() > 0)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Color);
+		glBufferSubData(GL_ARRAY_BUFFER, offsetColor, (sizeof(glm::vec4) * entities.size()), &colors[0]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Tex);
-	glBufferSubData(GL_ARRAY_BUFFER, offsetTex, (sizeof(float) * entities.size()), &texSlots[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Tex);
+		glBufferSubData(GL_ARRAY_BUFFER, offsetTex, (sizeof(float) * entities.size()), &texSlots[0]);
 	
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Pos);
-	glBufferSubData(GL_ARRAY_BUFFER, offsetPos, (sizeof(glm::mat4) * entities.size()), &modelMat4[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Pos);
+		glBufferSubData(GL_ARRAY_BUFFER, offsetPos, (sizeof(glm::mat4) * entities.size()), &modelMat4[0]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Tex_Coords);
-	glBufferSubData(GL_ARRAY_BUFFER, offsetTexCoords, sizeof(TexCoords) * entities.size(), &texCoords[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, this->VBO_Tex_Coords);
+		glBufferSubData(GL_ARRAY_BUFFER, offsetTexCoords, sizeof(TexCoords) * entities.size(), &texCoords[0]);
+
+		
+
+	}
 
 	//here just check if the player was added, meaning that it only have one instance
 	if (this->instances == 1)
 		this->instances += entities.size();
-	else 
+	else
 		this->instances = entities.size();
+
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -280,6 +297,13 @@ void SpriteRendererInstanced::addEntity(Entity2D_Instaciaded& entity)
 {
 	glm::mat4 model(1.0f);
 	model = glm::translate(model, entity.m_position);
+	if (entity.m_direction.x == -1.0f)
+	{
+		model = glm::translate(model, glm::vec3(0.5 * entity.m_size.x, 0.5 * entity.m_size.y, 0.0f));
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(-0.5 * entity.m_size.x, -0.5 * entity.m_size.y, 0.0f));
+
+	}
 	model = glm::scale(model, glm::vec3(entity.m_size, 1.0f));
 	
 	glBindVertexArray(this->VAO);
@@ -347,13 +371,10 @@ void SpriteRendererInstanced::emptyAllData()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void SpriteRendererInstanced::draw(Camera& camera, std::vector<Texture2D> textures) {
-	glm::mat4 model(1.0f);
-	model = glm::translate(model, glm::vec3(camera.Zoom, camera.Zoom, 1.0f));
-	model = glm::scale(model, glm::vec3(camera.Zoom, camera.Zoom, 1.0f));
+void SpriteRendererInstanced::draw(Camera& camera, std::vector<Texture2D>& textures) {
 	
 	// log in console the renderer draw call
-#if DEBUG
+#ifdef DEBUG
 	if (!m_initRender)
 	{
 		std::cout << "Render call: " << this->renderName << "\n";

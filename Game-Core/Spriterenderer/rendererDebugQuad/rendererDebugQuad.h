@@ -11,7 +11,7 @@ public:
 	~rendererDebugQuad();
 
 	void reserveData(int sizeToReserve = 1000);
-	void initData(std::vector<Entity2D_Instaciaded>& entities);
+	void initData(std::vector<Entity2D_Instaciaded*>& entities);
 	void updateData(Entity2D_Instaciaded& entity);
 	void emptyData();
 	void draw(Camera& camera);

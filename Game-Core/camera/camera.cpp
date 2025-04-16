@@ -1,17 +1,19 @@
 #include"camera.h"
+
 #include<glm/gtc/matrix_transform.hpp>
+
 
 const float SPEED = 120.5f;
 const float ZOOM = 1.0f;
 
-Camera::Camera(glm::vec3 position, glm::vec3 up) 
+Camera::Camera(glm::vec2 projectionSize, glm::vec3 position, glm::vec3 up) 
 	:pos(position),up(up),worldUp(0.0f,1.0f,0.0f),front(0.0f,0.0f,-1.0f), movementSpeed(SPEED), 
-	Zoom(ZOOM), right(1.0f,0.0,0.0f)
+	Zoom(ZOOM), right(1.0f,0.0,0.0f), m_projectionSize(projectionSize)
 { }
 
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ) 
+Camera::Camera(float projectSizeX, float projectSizeY, float posX, float posY, float posZ, float upX, float upY, float upZ)
 	:pos(posX,posY,posZ), up(upX,upY,upZ), worldUp(0.0f,1.0f,0.0f), front(0.0f,0.0f,-1.0f),
-	movementSpeed(SPEED), Zoom(ZOOM)
+	movementSpeed(SPEED), Zoom(ZOOM),m_projectionSize(projectSizeX, projectSizeY)
 { }
 
 void Camera::ProcessKeyBoard(cameraMovement direction, float dt) {
@@ -52,4 +54,15 @@ glm::mat4 Camera::getZoomMatrix() {
 	zoomMatrix = glm::scale(zoomMatrix, glm::vec3(this->Zoom, this->Zoom, 1.0f));
 	return zoomMatrix;
 }
+
+glm::vec3 Camera::getCameraPos()
+{
+	return this->pos;
+}
+
+glm::vec2 Camera::getProjectionSize()
+{
+	return glm::vec2(this->m_projectionSize.x / this->Zoom, this->m_projectionSize.y / this->Zoom);
+}
+
 void Camera::updateCameraVectors() {}

@@ -14,6 +14,12 @@ void main(){
 	if (texSlot == 0.0){
 	
 		FragColor = texelFetch(texture0, ivec2(TexCoords), 0);
+		
+		if (FragColor.w == 0.0)
+			discard;
+		else 
+			FragColor.w = color.w;
+		
 	}	
 	else{
 	

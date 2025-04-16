@@ -6,8 +6,18 @@
 #include<glad/gl.h>
 #include<glm/gtc/type_ptr.hpp>
 
+static int instance = 0;
+
 Shader::Shader(const char* shaderVertexSource, const char* shaderFragmentSource,
-	const char* shaderGeometrySource) {
+	const char* shaderGeometrySource,std::string name) {
+	if(name == "")
+	{
+		this->shaderName = "shader " + std::to_string(instance);
+		instance++;
+
+	}
+	else 
+		this->shaderName = name;
 
 	std::string vertexCode, fragmentCode, geometryCode;
 
@@ -38,7 +48,7 @@ Shader::Shader(const char* shaderVertexSource, const char* shaderFragmentSource,
 	const char* vShaderCode = vertexCode.c_str();
 	const char* fShaderCode = fragmentCode.c_str();
 	const char* gShaderCode = geometryCode.c_str();
-
+	
 	unsigned int sVertex, sFragment, sGeometry;
 
 	sVertex = glCreateShader(GL_VERTEX_SHADER);
@@ -86,7 +96,7 @@ Shader& Shader::use() {
 void Shader::checkCompileErrors(unsigned int object, std::string type) {
 	int success;
 	char infoLog[1024];
-
+	
 	if (type != "PROGRAM") {
 
 
@@ -94,7 +104,7 @@ void Shader::checkCompileErrors(unsigned int object, std::string type) {
 
 		if (!success) {
 			glGetShaderInfoLog(object, 1024, NULL, infoLog);
-			std::cout << "| ERROR::SHADER: Compile-time error: Type: " << type << "\n"
+			std::cout << "| ERROR::SHADER: "<<this->shaderName<<" Compile-time error: Type: " << type << "\n"
 				<< infoLog << "\n -- ---------------------------------------------- --"
 				<< std::endl;
 		}
@@ -103,7 +113,7 @@ void Shader::checkCompileErrors(unsigned int object, std::string type) {
 		glGetProgramiv(object, GL_LINK_STATUS, &success);
 		if (!success) {
 			glGetProgramInfoLog(object, 1024, NULL, infoLog);
-			std::cout << "| ERROR::SHADER: Link-time error: Type: " << type << "\n"
+			std::cout << "| ERROR::SHADER: "<<this->shaderName<<" Link-time error: Type: " << type << "\n"
 				<< infoLog << "\n -- ---------------------------------------------- --"
 				<< std::endl;
 		}

@@ -1,13 +1,16 @@
 #include"player.h"
 #include"debugLog/debugLog.h"
+#include"mathFuncs/mathFuncs.h"
 
 Player::Player(int* renderIndex, glm::vec3 position, glm::vec2 size,
 	glm::vec4 color, glm::vec2 posOffsetRect, glm::vec2 sizeOffsetRect, float texSlot, glm::vec2 texPos,
 	glm::vec2 texSize)
 	:Entity2D_Instaciaded(renderIndex, position, size, color, posOffsetRect, sizeOffsetRect, texSlot,
-		texPos, texSize), m_showPlayerHitboxQuad(false)
+		texPos, texSize), m_showPlayerHitboxQuad(false), m_hitTime(0.0f), m_hitTimeDur(3.0f)
 {
-	
+	this->m_tagName = "player";
+	this->m_color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	this->m_gravityInfluence = true;
 }
 
 Player::~Player() 
@@ -70,12 +73,12 @@ void Player::move(float& dt)
 
 	}
 
-	else if (!this->m_pushed && this->m_grounded)
+	else if (!this->m_pushed && this->m_grounded || this->m_speed.y == 0.0f && !this->m_pushed)
 		this->state = IDLE;
 
 	if (this->m_speed.y > 0.0f && !this->m_grounded)
 		this->state = FALL;
-	if (this->m_speed.y <= 0.0f && !this->m_grounded)
+	if (this->m_speed.y < 0.0f && !this->m_grounded)
 		this->state = JUMP;
 	
 	if (this->m_wallTouch && !this->m_grounded)
@@ -89,15 +92,19 @@ void Player::move(float& dt)
 
 void Player::m_anim(float& dt)
 {
+
+	/*
+	Depending of the state it changes the texture coords for the animation in the TextureAtlas.png
+	*/
 	if (this->state == IDLE)
 	{
-		if (this->m_texCoords.position.y >= 16.0f)
+		if (this->m_texCoords.position.y > 0.0f)
 		{
 			this->m_texCoords.position.y = 0.0f;
 			this->m_texCoords.position.x = 0.0f;
 			this->m_animTime = 0.0f;
 		}
-		if (this->m_texCoords.position.x > 96.0f)
+		if (this->m_texCoords.position.x == 96.0f)
 			this->m_texCoords.position.x = 0.0f;
 		else if (this->m_animTime >= this->m_animTimeLimit)
 		{
@@ -154,6 +161,63 @@ void Player::m_anim(float& dt)
 	}
 }
 
+void Player::m_onCollision()
+{
+	if (this->m_col && this->m_bottom)
+	{
+		LOG("Player hurt a slime");
+		
+		if (this->m_speed.y > 0.0f)
+		{
+			this->m_speed.y = 0.0f;
+			this->m_speed.y = -60.0f;
+		}
+		
+		this->m_bottom = false;
+
+	}
+	else if (this->m_col && (this->m_right || this->m_left))
+	{
+		LOG("Player was hurt by slime");
+		if (this->m_speed.x > 0.0f || this->m_speed.x < 0.0f && this->m_pushed)
+		{
+			this->m_speed.x = 0.0f;
+			this->m_speed.x = this->m_right ? -80.0f : 80.0f;
+		}
+		else
+			this->m_speed.x = this->m_right ? -80.0f : 80.0f;
+
+		this->m_right = false;
+		this->m_left = false;
+		this->m_color.w = 0.5f;
+	}
+	else if (this->m_col && this->m_top)
+	{
+		LOG("Player was hit by slime on top");
+		if (this->m_speed.y < 0.0f)
+			this->m_speed.y = 0.0f;
+		this->m_top = false;
+		this->m_color.w = 0.5f;
+	}
+
+	this->m_col = false;
+}
+
+void Player::m_updateTimer(float& dt)
+{
+	if (this->m_hitTime >= this->m_hitTimeDur)
+	{
+		this->m_hitTime = 0.0f;
+		this->m_updateTimers = false;
+		this->m_color.w = 1.0f;
+	}
+	else if (this->m_hitTime < this->m_hitTimeDur && this->m_updateTimers)
+	{
+		 
+		this->m_hitTime += dt;
+	}
+}
+
 void Player::m_setVisibilityHitbox(bool visibility)
 {
 	this->m_showPlayerHitboxQuad = visibility;
@@ -162,4 +226,9 @@ void Player::m_setVisibilityHitbox(bool visibility)
 bool Player::m_returnVisibilityHitbox()
 {
 	return this->m_showPlayerHitboxQuad;
+}
+
+std::string Player::m_getTagName()
+{
+	return m_tagName;
 }

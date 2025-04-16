@@ -1,5 +1,5 @@
 project "resources"
-    kind "SharedLib"
+    kind "None"
     files {"textures/*"}
 
     removefiles {"**.vcxproj", "**.vcxproj.filters"}

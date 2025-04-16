@@ -5,11 +5,12 @@
 class Shader {
 private:
 	unsigned int id;
+	std::string shaderName;
 
 public:
 	Shader() {};
 	Shader(const char* shaderVertexSource, const char* shaderFragmentSource,
-		const char* shaderGeometrySource = nullptr);
+		const char* shaderGeometrySource = nullptr,std::string name = "");
 
 	Shader& use();
 
