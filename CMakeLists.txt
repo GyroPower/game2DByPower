@@ -43,7 +43,7 @@ add_subdirectory(game-core)
 
 #creating the executable that have the sanbox made it by me
 file(GLOB_RECURSE SANDBOX_SRC "${CMAKE_SOURCE_DIR}/sandbox/**")
-add_executable(game2DbyPower-cmake ${SANDBOX_SRC})
+add_executable(game2DbyPower ${SANDBOX_SRC})
 
 
 
@@ -66,15 +66,15 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${SHADER_DIR} ${OUTPUT_SHADER_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${TEXTURE_DIR} ${OUTPUT_TEXTURE_DIR}
 )
-add_dependencies(game2DbyPower-cmake copy_assets)
+add_dependencies(game2DbyPower copy_assets)
 
 
 # Dependencies should be built first
-add_dependencies(game2DbyPower-cmake glm glad glfw 
+add_dependencies(game2DbyPower glm glad glfw 
 imgui stb_image game_core game_gui)
 
 #linking all dependecies 
-target_link_libraries(game2DbyPower-cmake glm imgui glad glfw stb_image 
+target_link_libraries(game2DbyPower glm imgui glad glfw stb_image 
 game_core game_gui)
 
 include_directories(./sandbox)
