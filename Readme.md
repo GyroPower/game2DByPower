@@ -6,7 +6,7 @@ Build it with C++, OpenGL(Using GLAD), ImGui, GLFW, stb_image (for load textures
 To build it use cmake, cmake is the only dependency to install besides having C/C++ compilers and linkers in your machine
 Do: cmake -G "Visual Studio 17 2022" -B ./build 
 
-Instead of "Visual Studio 17 2022" can use of course the build system you want (Make, Ninja, etc).In the exten dir are the sources for GLAD, ImGui and stb_image 
+Instead of "Visual Studio 17 2022" can use of course the build system you want (Make, Ninja, etc). In the extern dir are the sources for GLAD, ImGui and stb_image 
 
 All the files, objects, systems need it to do example in sandBox dir (where the game is running) are in game-core
 except for the collision detection system (need to restructure and Fix it)
