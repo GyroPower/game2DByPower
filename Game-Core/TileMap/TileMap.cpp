@@ -1,5 +1,4 @@
 #include"TileMap.h"
-#include"debugLog/debugLog.h"
 
 TileMap::TileMap(glm::vec2 mapSize, int tileSize)
 	: m_mapSize(mapSize), m_tileSize(tileSize),m_tileRenderIndex(0)
@@ -93,7 +92,8 @@ void TileMap::m_addTileToRender(glm::vec3 wordlPos)
 
 	if (tile && !tile->m_isVisible())
 	{
-		tile->m_setVisible(true, this->m_tileRenderIndex);
+		bool visible = true;
+		tile->m_setVisible(visible, this->m_tileRenderIndex);
 		this->m_tilesToRender.emplace_back(tile);
 
 
@@ -111,10 +111,12 @@ void TileMap::m_deleteTileFromRender(glm::vec3 worldPos)
 
 	if (tile && tile->m_isVisible())
 	{
+		bool visible = false;
+		int tileRenderInstance = this->m_tileRenderIndex;
 		
 		int tileIndex = tile->m_returnRenderIndex();
 		int lastIndex = m_tilesToRender[m_tilesToRender.size() - 1]->m_returnRenderIndex();
-		tile->m_setVisible(false, this->m_tileRenderIndex);
+		tile->m_setVisible(visible, tileRenderInstance);
 		
 		
 

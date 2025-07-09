@@ -15,3 +15,5 @@ imgui.ini
 .gitignore
 .vscode/
 .vs/
+build-debug/
+.cache/

@@ -1,5 +1,7 @@
 
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.5...3.20)
+
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 project(game2DbyPower)
 
@@ -15,21 +17,6 @@ add_compile_definitions(
     $<$<CONFIG:Release>:RELEASE>
 )
 
-# Set External Dependency Paths
-set(GLM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glm-src)
-set(GLFW_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glfw-src/include)
-set(GLAD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glad/include)
-set(IMGUI_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/imgui)
-set(STB_IMAGE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external)
-
-# set the own libraries paths for the .exe
-set(CORE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/game-core)
-set(GUI_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/game-gui)
-
-#adding the include directories
-include_directories(${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} 
-${GLFW_INCLUDE_DIR} ${GLAD_INCLUDE_DIR} ${CORE_INCLUDE_DIR} 
-${GUI_INCLUDE_DIR} ${STB_IMAGE_INCLUDE_DIR})
 
 #adding some libraries from github and some others that come with the project
 include(ExternalProject)
@@ -51,6 +38,21 @@ add_executable(game2DbyPower ${SANDBOX_SRC})
 # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 # set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE")
 
+# Set External Dependency Paths
+set(GLM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glm-src)
+set(GLFW_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glfw-src/include)
+set(GLAD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glad/include)
+set(IMGUI_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/imgui)
+set(STB_IMAGE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external)
+
+# set the own libraries paths for the .exe
+set(CORE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/game-core)
+set(GUI_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/game-gui)
+
+#adding the include directories
+include_directories(${GLM_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} 
+${GLFW_INCLUDE_DIR} ${GLAD_INCLUDE_DIR} ${CORE_INCLUDE_DIR} 
+${GUI_INCLUDE_DIR} ${STB_IMAGE_INCLUDE_DIR})
 
 
 

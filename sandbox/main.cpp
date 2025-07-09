@@ -4,6 +4,7 @@
 #include<backend/imgui_impl_opengl3.h>
 #include<imgui.h>
 #include<iostream>
+#include<string>
 #include"sandBox/sandBox.h"
 
 SandBox sandbox;
@@ -62,13 +63,17 @@ int main()
 
 	ImGui::StyleColorsDark();
 
-	
+#ifdef DEBUG
+	std::cout<<"Debug build \n";
+#endif
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 420 core");
 
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
+
+	std::string greed = "a Hi to you";
 	
 	sandbox.initSandBox(WINDOW_WIDTH, WINDOW_HEIGHT);
 
