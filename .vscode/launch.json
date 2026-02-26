@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch game2DbyPower Debug",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/build-debug/game2DbyPower"
+    },
+    {
+      "name": "Launch game2DbyPower debug codelldb",
+      "type": "codelldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Debug/game2DbyPower",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopOnEntry": false
+    }
+  ]
+}
